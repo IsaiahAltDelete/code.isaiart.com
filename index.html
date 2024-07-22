@@ -7,6 +7,8 @@
     <link rel="icon" href="https://github.com/IsaiahAltDelete/code.isaiart.com/blob/main/favicon.ico?raw=true">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/dracula.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/dialog/dialog.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/search/matchesonscrollbar.min.css">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -14,7 +16,6 @@
             padding: 0;
             height: 100vh;
             display: flex;
-            background: linear-gradient(45deg, #ff9a9e 0%, #fad0c4 99%, #fad0c4 100%);
             color: #ffffff;
             overflow: hidden;
         }
@@ -145,6 +146,7 @@
                 <button onclick="openPreview()">Preview</button>
                 <input type="file" id="import-file" style="display: none;" onchange="importCode()">
                 <button onclick="document.getElementById('import-file').click()">Import</button>
+                <button onclick="searchReplace()">Search/Replace</button>
                 <div class="theme-switch">
                     <span>Eclipse</span>
                     <label class="switch">
@@ -164,6 +166,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/htmlmixed/htmlmixed.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/css/css.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/search/search.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/search/searchcursor.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/dialog/dialog.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/scroll/annotatescrollbar.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/search/matchesonscrollbar.min.js"></script>
     <script>
         let editor;
         const preview = document.getElementById('preview-frame');
@@ -250,6 +257,10 @@
             }
         }
 
+        function searchReplace() {
+            CodeMirror.commands.find(editor);
+        }
+
         themeToggle.addEventListener('change', function() {
             if (this.checked) {
                 editor.setOption('theme', 'dracula');
@@ -258,9 +269,18 @@
             }
         });
 
+        // Dynamic background
+        function updateGradient() {
+            const hue1 = (Date.now() / 50) % 360;
+            const hue2 = (hue1 + 60) % 360;
+            document.body.style.background = `linear-gradient(45deg, hsl(${hue1}, 100%, 75%) 0%, hsl(${hue2}, 100%, 75%) 100%)`;
+            requestAnimationFrame(updateGradient);
+        }
+
         // Initialize
         initCodeMirror();
         updatePreview();
+        updateGradient();
     </script>
 </body>
 </html>
