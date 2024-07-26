@@ -5,170 +5,162 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CODE</title>
     <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
-        :root {
-            --bg-color: #1a1a1a;
-            --text-color: #ffffff;
-            --neumorphic-light: #2c2c2c;
-            --neumorphic-dark: #141414;
-            --accent-color: #4CAF50;
-        }
-
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            text-transform: uppercase;
         }
 
-        body {
-            font-family: 'Source Code Pro', monospace;
-            background-color: var(--bg-color);
-            color: var(--text-color);
+        body, html {
+            font-family: 'Space Mono', monospace;
+            background-color: #000;
+            color: #0f0;
+            overflow: hidden;
+            height: 100%;
+            width: 100%;
+        }
+
+        #canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+
+        .content {
+            position: relative;
+            height: 100vh;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            overflow: hidden;
-        }
-
-        .container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-            max-width: 1200px;
-            padding: 2rem;
+            z-index: 1;
         }
 
         h1 {
-            font-size: 3rem;
+            font-size: 4rem;
             margin-bottom: 2rem;
-            position: relative;
-            white-space: nowrap;
-            border-right: 0.15em solid var(--accent-color);
-            animation: typing 8s steps(30, end) infinite,
-                       blink-caret 0.75s step-end infinite;
-            overflow: hidden;
-            width: 300px; /* Adjust this value based on your title length */
+            text-shadow: 0 0 10px #0f0, 0 0 20px #0f0, 0 0 30px #0f0;
         }
 
         .tools {
             display: flex;
-            gap: 2rem;
-            justify-content: center;
-            flex-wrap: wrap;
+            justify-content: space-around;
+            width: 100%;
+            max-width: 1200px;
         }
 
         .tool {
-            background-color: var(--bg-color);
-            border-radius: 15px;
-            width: 250px;
-            height: 150px;
-            box-shadow: 8px 8px 15px var(--neumorphic-dark), -8px -8px 15px var(--neumorphic-light);
+            cursor: pointer;
+            padding: 1rem;
+            border: 2px solid #0f0;
+            border-radius: 10px;
             transition: all 0.3s ease;
-            animation: fadeInUp 1s ease-out, pulse 2s infinite;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
             text-decoration: none;
-            color: var(--text-color);
+            color: #0f0;
         }
 
         .tool:hover {
-            transform: translateY(-10px);
-            box-shadow: 12px 12px 20px var(--neumorphic-dark), -12px -12px 20px var(--neumorphic-light);
-        }
-
-        .tool h2 {
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .tool span {
-            color: var(--accent-color);
-            font-weight: bold;
+            background-color: #0f0;
+            color: #000;
+            transform: scale(1.1);
         }
 
         .back-link {
-            margin-top: 2rem;
-            color: var(--accent-color);
+            position: absolute;
+            bottom: 2rem;
+            color: #0f0;
             text-decoration: none;
-            font-weight: bold;
-            transition: color 0.3s ease;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
         }
 
         .back-link:hover {
-            color: #66BB6A;
-        }
-
-        @keyframes typing {
-            0%, 100% { width: 0 }
-            50% { width: 300px } /* Adjust this value to match the h1 width */
-        }
-
-        @keyframes blink-caret {
-            from, to { border-color: transparent }
-            50% { border-color: var(--accent-color) }
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(50px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes pulse {
-            0% {
-                transform: scale(1);
-            }
-            50% {
-                transform: scale(1.05);
-            }
-            100% {
-                transform: scale(1);
-            }
+            text-shadow: 0 0 10px #0f0, 0 0 20px #0f0;
         }
 
         @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+
             .tools {
                 flex-direction: column;
                 align-items: center;
             }
-            
+
             .tool {
-                width: 100%;
-                max-width: 300px;
+                margin-bottom: 1rem;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Coding Tools</h1>
+    <canvas id="canvas"></canvas>
+    <div class="content">
+        <h1>CODING TOOLS</h1>
         <div class="tools">
-            <a href="https://code.isaiart.com/editor" target="_blank" class="tool">
-                <h2>Code Editor</h2>
-                <span>Launch Editor</span>
-            </a>
-            <a href="https://code.isaiart.com/separator" target="_blank" class="tool">
-                <h2>Code Separator</h2>
-                <span>Separate Code</span>
-            </a>
-            <a href="https://code.isaiart.com/combiner" target="_blank" class="tool">
-                <h2>Code Combiner</h2>
-                <span>Combine Code</span>
-            </a>
+            <a href="https://code.isaiart.com/editor" target="_blank" class="tool">CODE EDITOR</a>
+            <a href="https://code.isaiart.com/separator" target="_blank" class="tool">CODE SEPARATOR</a>
+            <a href="https://code.isaiart.com/combiner" target="_blank" class="tool">CODE COMBINER</a>
         </div>
+        <a href="https://isaiart.com" class="back-link">BACK TO ISAIART.COM</a>
     </div>
-    <a href="https://isaiart.com" class="back-link">Back to IsaiArt.com</a>
+
+    <script>
+        // Three.js setup
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas'), antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+
+        // Create particles
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlesCount = 5000;
+        const posArray = new Float32Array(particlesCount * 3);
+
+        for (let i = 0; i < particlesCount * 3; i++) {
+            posArray[i] = (Math.random() - 0.5) * 5;
+        }
+
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+
+        const particlesMaterial = new THREE.PointsMaterial({
+            size: 0.005,
+            color: 0x00ff00
+        });
+
+        const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(particlesMesh);
+
+        camera.position.z = 2;
+
+        // Animation
+        function animate() {
+            requestAnimationFrame(animate);
+            particlesMesh.rotation.y += 0.001;
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        // Resize handler
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Mouse interaction
+        document.addEventListener('mousemove', (event) => {
+            const mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+            const mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+            particlesMesh.rotation.x = mouseY * 0.5;
+            particlesMesh.rotation.y = mouseX * 0.5;
+        });
+    </script>
 </body>
 </html>
