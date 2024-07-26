@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Separator</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: Arial, sans-serif;
+            background-color: #121f2f;
+        }
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .desktop1 {
+            width: 100%;
+            max-width: 1200px;
+            aspect-ratio: 1440 / 1024;
+            position: relative;
+        }
+        .line {
+            width: 93.19px;
+            height: 0px;
+            position: absolute;
+            border: 7px solid white;
+            transition: all 0.3s ease;
+        }
+        .line1 { left: 40.625%; top: 17.77%; }
+        .line2 { left: 40.625%; top: 50%; }
+        .line3 { left: 40.625%; top: 82.23%; }
+        .line:hover {
+            border-color: #FFA800;
+            box-shadow: 0 0 10px rgba(255, 168, 0, 0.5);
+        }
+        .rectangle {
+            position: absolute;
+            background: #D9D9D9;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 28px;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+        .rectangle:hover {
+            transform: translateY(-5px);
+            box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
+        }
+        .rectangle1 {
+            width: 38.82%;
+            height: 91.89%;
+            left: 2.99%;
+            top: 4%;
+            border: 14px solid white;
+        }
+        .rectangle5, .rectangle6, .rectangle7 {
+            width: 51.18%;
+            height: 27.44%;
+            left: 45.69%;
+        }
+        .rectangle5 {
+            top: 4%;
+            border: 14px solid #FFA800;
+        }
+        .rectangle6 {
+            top: 36.23%;
+            border: 14px solid #00D1FF;
+        }
+        .rectangle7 {
+            top: 68.46%;
+            border: 14px solid #DDD51D;
+        }
+        textarea {
+            width: 100%;
+            height: calc(100% - 70px);
+            resize: none;
+            border: none;
+            background: transparent;
+            font-family: monospace;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        textarea:focus {
+            outline: none;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+        button {
+            padding: 10px 20px;
+            margin-top: 10px;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        .separate-btn {
+            width: 100%;
+            background-color: #FFA800;
+        }
+        .copy-btn {
+            background-color: #00D1FF;
+            position: absolute;
+            right: 20px;
+            bottom: 20px;
+        }
+        .separate-btn:hover, .copy-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        .separate-btn:active, .copy-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+        h2 {
+            margin: 0 0 10px 0;
+            color: #333;
+            transition: all 0.3s ease;
+        }
+        .rectangle:hover h2 {
+            transform: translateY(-2px);
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><text y='25' font-size='27'>💔</text></svg>">
+</head>
+<body>
+    <div class="container">
+        <div class="desktop1">
+            <div class="line line1"></div>
+            <div class="line line2"></div>
+            <div class="line line3"></div>
+            <div class="rectangle rectangle1">
+                <h2>Input Combined Code</h2>
+                <textarea id="input" placeholder="Paste your combined HTML, CSS, and JavaScript code here"></textarea>
+                <button class="separate-btn" onclick="separateCode()">Separate Code</button>
+            </div>
+            <div class="rectangle rectangle5">
+                <h2>HTML</h2>
+                <textarea id="htmlOutput" readonly></textarea>
+                <button class="copy-btn" onclick="copyToClipboard('htmlOutput')">Copy</button>
+            </div>
+            <div class="rectangle rectangle6">
+                <h2>CSS</h2>
+                <textarea id="cssOutput" readonly></textarea>
+                <button class="copy-btn" onclick="copyToClipboard('cssOutput')">Copy</button>
+            </div>
+            <div class="rectangle rectangle7">
+                <h2>JavaScript</h2>
+                <textarea id="jsOutput" readonly></textarea>
+                <button class="copy-btn" onclick="copyToClipboard('jsOutput')">Copy</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function separateCode() {
+            const input = document.getElementById('input').value;
+            const htmlOutput = document.getElementById('htmlOutput');
+            const cssOutput = document.getElementById('cssOutput');
+            const jsOutput = document.getElementById('jsOutput');
+
+            // Reset outputs
+            htmlOutput.value = '';
+            cssOutput.value = '';
+            jsOutput.value = '';
+
+            // Extract HTML (everything outside of <style> and <script> tags)
+            let htmlContent = input.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+                                   .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+                                   .trim();
+            htmlOutput.value = htmlContent;
+
+            // Extract CSS
+            const cssRegex = /<style[^>]*>([\s\S]*?)<\/style>/gi;
+            let cssMatch;
+            let cssContent = '';
+            while ((cssMatch = cssRegex.exec(input)) !== null) {
+                cssContent += cssMatch[1] + '\n\n';
+            }
+            cssOutput.value = cssContent.trim();
+
+            // Extract JavaScript
+            const jsRegex = /<script[^>]*>([\s\S]*?)<\/script>/gi;
+            let jsMatch;
+            let jsContent = '';
+            while ((jsMatch = jsRegex.exec(input)) !== null) {
+                jsContent += jsMatch[1] + '\n\n';
+            }
+            jsOutput.value = jsContent.trim();
+        }
+
+        function copyToClipboard(elementId) {
+            const element = document.getElementById(elementId);
+            element.select();
+            document.execCommand('copy');
+        }
+    </script>
+</body>
+</html>
