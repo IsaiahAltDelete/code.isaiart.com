@@ -45,7 +45,7 @@
         .editor-container {
             display: flex;
             justify-content: space-between;
-            height: calc(100% - 80px);
+            height: calc(100% - 120px);
             gap: 20px;
         }
 
@@ -78,11 +78,12 @@
             flex-grow: 1;
             background-color: #f5f5f5;
             padding: 10px;
+            position: relative;
         }
 
         textarea {
             width: 100%;
-            height: 100%;
+            height: calc(100% - 50px);
             border: none;
             resize: none;
             background-color: #f5f5f5;
@@ -115,11 +116,32 @@
             transform: translateY(-2px);
             box-shadow: 0px 4px 8px rgba(0,0,0,0.2);
         }
+
+        .editor-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 5px;
+            margin-top: 10px;
+        }
+
+        .small-button {
+            padding: 5px 10px;
+            font-size: 14px;
+            background-color: #000000;
+            color: white;
+            border: none;
+            border-radius: var(--inner-radius);
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .small-button:hover {
+            background-color: #333333;
+            transform: translateY(-2px);
+            box-shadow: 0px 4px 8px rgba(0,0,0,0.2);
+        }
     </style>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><text y='25' font-size='30'>🌮</text></svg>">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><text y='50' font-size='100'>🌮</text></svg>" sizes="180x180">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><text y='90' font-size='180'>🌮</text></svg>" sizes="192x192">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><text y='240' font-size='480'>🌮</text></svg>" sizes="512x512">
 </head>
 <body>
     <div class="desktop">
@@ -129,26 +151,38 @@
                     <div class="editor-header">HTML</div>
                     <div class="editor-body">
                         <textarea id="html-code" placeholder="Enter HTML code here"></textarea>
+                        <div class="editor-buttons">
+                            <button class="small-button" onclick="copySection('html-code')">Copy</button>
+                            <button class="small-button" onclick="clearSection('html-code')">Clear</button>
+                        </div>
                     </div>
                 </div>
                 <div class="editor">
                     <div class="editor-header">CSS</div>
                     <div class="editor-body">
                         <textarea id="css-code" placeholder="Enter CSS code here"></textarea>
+                        <div class="editor-buttons">
+                            <button class="small-button" onclick="copySection('css-code')">Copy</button>
+                            <button class="small-button" onclick="clearSection('css-code')">Clear</button>
+                        </div>
                     </div>
                 </div>
                 <div class="editor">
                     <div class="editor-header">JavaScript</div>
                     <div class="editor-body">
                         <textarea id="js-code" placeholder="Enter JavaScript code here"></textarea>
+                        <div class="editor-buttons">
+                            <button class="small-button" onclick="copySection('js-code')">Copy</button>
+                            <button class="small-button" onclick="clearSection('js-code')">Clear</button>
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="button-container">
                 <button class="button" onclick="saveCode()">Save</button>
                 <button class="button" onclick="runCode()">▶ Run Code</button>
-                <button class="button" onclick="clearCode()">Clear</button>
-                <button class="button" onclick="copyCode()">Copy</button>
+                <button class="button" onclick="clearCode()">Clear All</button>
+                <button class="button" onclick="copyCode()">Copy All</button>
             </div>
         </div>
     </div>
@@ -172,11 +206,15 @@
                 </head>
                 <body>
                     ${htmlCode}
-                    <script>${jsCode}<\/script>
+                    <script>${jsCode}</script>
                 </body>
                 </html>
             `);
             newTab.document.close();
+        }
+
+        function clearSection(sectionId) {
+            document.getElementById(sectionId).value = '';
         }
 
         function clearCode() {
@@ -201,7 +239,7 @@
                 </head>
                 <body>
                     ${htmlCode}
-                    <script>${jsCode}<\/script>
+                    <script>${jsCode}</script>
                 </body>
                 </html>
             `;
@@ -216,6 +254,15 @@
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
+        }
+
+        function copySection(sectionId) {
+            const code = document.getElementById(sectionId).value;
+            navigator.clipboard.writeText(code).then(() => {
+                alert('Code copied to clipboard!');
+            }).catch(err => {
+                console.error('Could not copy text: ', err);
+            });
         }
 
         function copyCode() {
@@ -234,7 +281,7 @@
                 </head>
                 <body>
                     ${htmlCode}
-                    <script>${jsCode}<\/script>
+                    <script>${jsCode}</script>
                 </body>
                 </html>
             `;
