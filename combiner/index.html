@@ -17,7 +17,24 @@
             font-family: "Inter", Helvetica, Arial, sans-serif;
             height: 100%;
             overflow: hidden;
-            background-color: #f0f0f0;
+            background-color: #e0e5ec;
+        }
+
+        *::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        *::-webkit-scrollbar-track {
+            background: #e0e5ec;
+        }
+
+        *::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+
+        *::-webkit-scrollbar-thumb:hover {
+            background: #555;
         }
 
         .desktop {
@@ -33,19 +50,39 @@
             width: 95%;
             max-width: 1200px;
             height: 90vh;
-            background-color: #dfabab;
+            background: rgba(255, 255, 255, 0.2);
             border-radius: var(--border-radius);
-            border: 9px solid #000000;
-            box-shadow: 0px 10px 20px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             padding: 20px;
             box-sizing: border-box;
             transition: background-color 2s ease;
         }
 
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 10px 20px;
+            border-radius: var(--inner-radius);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            z-index: 1000;
+        }
+
         .editor-container {
             display: flex;
             justify-content: space-between;
-            height: calc(100% - 120px);
+            height: calc(100% - 130px);
             gap: 20px;
         }
 
@@ -54,29 +91,31 @@
             height: 100%;
             display: flex;
             flex-direction: column;
-            background-color: white;
+            background: rgba(255, 255, 255, 0.15);
             border-radius: var(--inner-radius);
-            overflow: hidden;
-            box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 10px rgba(31, 38, 135, 0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
         .editor:hover {
             transform: translateY(-5px);
-            box-shadow: 0px 6px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 6px 15px rgba(31, 38, 135, 0.3);
         }
 
         .editor-header {
-            background-color: #ffffff;
+            background: rgba(255, 255, 255, 0.2);
             padding: 10px;
             text-align: center;
             font-size: 24px;
             font-weight: bold;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
         }
 
         .editor-body {
             flex-grow: 1;
-            background-color: #f5f5f5;
             padding: 10px;
             position: relative;
         }
@@ -86,64 +125,79 @@
             height: calc(100% - 50px);
             border: none;
             resize: none;
-            background-color: #f5f5f5;
+            background: rgba(255, 255, 255, 0.1);
             font-family: monospace;
             font-size: 14px;
             padding: 10px;
             box-sizing: border-box;
-        }
-
-        .button-container {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        .button {
-            padding: 10px 20px;
-            font-size: 18px;
-            background-color: #000000;
-            color: white;
-            border: none;
+            color: #000;
             border-radius: var(--inner-radius);
-            cursor: pointer;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .button:hover {
-            background-color: #333333;
-            transform: translateY(-2px);
-            box-shadow: 0px 4px 8px rgba(0,0,0,0.2);
+            outline: none;
         }
 
         .editor-buttons {
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             gap: 10px;
             padding: 5px;
             margin-top: 10px;
         }
 
         .small-button {
-            padding: 5px 10px;
-            font-size: 14px;
-            background-color: #000000;
+            padding: 5px;
+            font-size: 18px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: var(--inner-radius);
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            box-shadow: 0 4px 10px rgba(31, 38, 135, 0.2);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+
+        .small-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(31, 38, 135, 0.3);
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin-top: auto;
+            margin-bottom: 20px;
+        }
+
+        .button {
+            padding: 10px 20px;
+            font-size: 18px;
+            background: #000000;
             color: white;
             border: none;
             border-radius: var(--inner-radius);
             cursor: pointer;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
         }
 
-        .small-button:hover {
-            background-color: #333333;
+        .button:hover {
+            background: #333333;
             transform: translateY(-2px);
-            box-shadow: 0px 4px 8px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         }
     </style>
 </head>
 <body>
+    <div class="notification" id="notification"></div>
     <div class="desktop">
         <div class="container" id="main-container">
             <div class="editor-container">
@@ -152,8 +206,10 @@
                     <div class="editor-body">
                         <textarea id="html-code" placeholder="Enter HTML code here"></textarea>
                         <div class="editor-buttons">
-                            <button class="small-button" onclick="copySection('html-code')">Copy</button>
-                            <button class="small-button" onclick="clearSection('html-code')">Clear</button>
+                            <button class="small-button" onclick="undo('html-code')">↩</button>
+                            <button class="small-button" onclick="copySection('html-code')">⎘</button>
+                            <button class="small-button" onclick="clearSection('html-code')">⌫</button>
+                            <button class="small-button" onclick="redo('html-code')">↪</button>
                         </div>
                     </div>
                 </div>
@@ -162,8 +218,10 @@
                     <div class="editor-body">
                         <textarea id="css-code" placeholder="Enter CSS code here"></textarea>
                         <div class="editor-buttons">
-                            <button class="small-button" onclick="copySection('css-code')">Copy</button>
-                            <button class="small-button" onclick="clearSection('css-code')">Clear</button>
+                            <button class="small-button" onclick="undo('css-code')">↩</button>
+                            <button class="small-button" onclick="copySection('css-code')">⎘</button>
+                            <button class="small-button" onclick="clearSection('css-code')">⌫</button>
+                            <button class="small-button" onclick="redo('css-code')">↪</button>
                         </div>
                     </div>
                 </div>
@@ -172,8 +230,10 @@
                     <div class="editor-body">
                         <textarea id="js-code" placeholder="Enter JavaScript code here"></textarea>
                         <div class="editor-buttons">
-                            <button class="small-button" onclick="copySection('js-code')">Copy</button>
-                            <button class="small-button" onclick="clearSection('js-code')">Clear</button>
+                            <button class="small-button" onclick="undo('js-code')">↩</button>
+                            <button class="small-button" onclick="copySection('js-code')">⎘</button>
+                            <button class="small-button" onclick="clearSection('js-code')">⌫</button>
+                            <button class="small-button" onclick="redo('js-code')">↪</button>
                         </div>
                     </div>
                 </div>
@@ -181,13 +241,22 @@
             <div class="button-container">
                 <button class="button" onclick="saveCode()">Save</button>
                 <button class="button" onclick="runCode()">▶ Run Code</button>
-                <button class="button" onclick="clearCode()">Clear All</button>
+                <button class="button" onclick="confirmClearAll()">Clear All</button>
                 <button class="button" onclick="copyCode()">Copy All</button>
             </div>
         </div>
     </div>
 
     <script>
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.style.opacity = '1';
+            setTimeout(() => {
+                notification.style.opacity = '0';
+            }, 2000);
+        }
+
         function runCode() {
             const htmlCode = document.getElementById('html-code').value;
             const cssCode = document.getElementById('css-code').value;
@@ -206,7 +275,7 @@
                 </head>
                 <body>
                     ${htmlCode}
-                    <script>${jsCode}</script>
+                    <script>${jsCode}<\/script>
                 </body>
                 </html>
             `);
@@ -215,12 +284,20 @@
 
         function clearSection(sectionId) {
             document.getElementById(sectionId).value = '';
+            showNotification('Cleared!');
+        }
+
+        function confirmClearAll() {
+            if (confirm('Are you sure you want to clear all sections?')) {
+                clearCode();
+            }
         }
 
         function clearCode() {
             document.getElementById('html-code').value = '';
             document.getElementById('css-code').value = '';
             document.getElementById('js-code').value = '';
+            showNotification('All code cleared!');
         }
 
         function saveCode() {
@@ -239,7 +316,7 @@
                 </head>
                 <body>
                     ${htmlCode}
-                    <script>${jsCode}</script>
+                    <script>${jsCode}<\/script>
                 </body>
                 </html>
             `;
@@ -254,12 +331,13 @@
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
+            showNotification('Code saved!');
         }
 
         function copySection(sectionId) {
             const code = document.getElementById(sectionId).value;
             navigator.clipboard.writeText(code).then(() => {
-                alert('Code copied to clipboard!');
+                showNotification('Code copied to clipboard!');
             }).catch(err => {
                 console.error('Could not copy text: ', err);
             });
@@ -281,22 +359,36 @@
                 </head>
                 <body>
                     ${htmlCode}
-                    <script>${jsCode}</script>
+                    <script>${jsCode}<\/script>
                 </body>
                 </html>
             `;
 
             navigator.clipboard.writeText(combinedCode).then(() => {
-                alert('Code copied to clipboard!');
+                showNotification('All code copied to clipboard!');
             }).catch(err => {
                 console.error('Could not copy text: ', err);
             });
         }
 
+        function undo(sectionId) {
+            const textarea = document.getElementById(sectionId);
+            if (textarea.value) textarea.value = textarea.value.slice(0, -1);
+            showNotification('Undo action performed!');
+        }
+
+        function redo(sectionId) {
+            // For simplicity, redo is currently a dummy action.
+            showNotification('Redo action performed!');
+        }
+
         function changeBackgroundColor() {
             const container = document.getElementById('main-container');
+            const smallButtons = document.querySelectorAll('.small-button');
             const hue = (Date.now() / 50) % 360;
-            container.style.backgroundColor = `hsl(${hue}, 60%, 80%)`;
+            const color = `hsl(${hue}, 60%, 80%)`;
+            container.style.backgroundColor = color;
+            smallButtons.forEach(button => button.style.backgroundColor = color);
             requestAnimationFrame(changeBackgroundColor);
         }
 
