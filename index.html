@@ -3,11 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CODE</title>
+    <title>CODING TOOLS</title>
     <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
+        :root {
+            --neon-green: #00ff00;
+            --bg-color: #0a0a0a;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -15,9 +20,9 @@
         }
 
         body, html {
-            font-family: 'Space Mono', monospace;
-            background-color: #000;
-            color: #0f0;
+            font-family: 'JetBrains Mono', monospace;
+            background-color: var(--bg-color);
+            color: var(--neon-green);
             overflow: hidden;
             height: 100%;
             width: 100%;
@@ -27,7 +32,8 @@
             position: fixed;
             top: 0;
             left: 0;
-            z-index: -1;
+            z-index: 0;
+            opacity: 0.8;
         }
 
         .content {
@@ -38,62 +44,152 @@
             justify-content: center;
             align-items: center;
             z-index: 1;
+            padding: 2rem;
+        }
+
+        .glitch-container {
+            position: relative;
+            margin-bottom: 4rem;
         }
 
         h1 {
-            font-size: 4rem;
-            margin-bottom: 2rem;
-            text-shadow: 0 0 10px #0f0, 0 0 20px #0f0, 0 0 30px #0f0;
+            font-size: 4.5rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5rem;
+            margin-bottom: 1rem;
+            position: relative;
+            text-shadow: 0 0 20px var(--neon-green);
         }
 
-        .tools {
-            display: flex;
-            justify-content: space-around;
+        h1::before, h1::after {
+            content: 'CODING TOOLS';
+            position: absolute;
             width: 100%;
-            max-width: 1200px;
+            height: 100%;
+            left: 0;
+            text-shadow: 0 0 15px var(--neon-green);
+        }
+
+        h1::before {
+            animation: glitch 3s infinite;
+            color: #ff0000;
+            z-index: -1;
+        }
+
+        h1::after {
+            animation: glitch 2s infinite;
+            color: #0000ff;
+            z-index: -2;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            max-width: 1000px;
+            width: 100%;
+            margin: 0 auto;
         }
 
         .tool {
-            cursor: pointer;
-            padding: 1rem;
-            border: 2px solid #0f0;
-            border-radius: 10px;
-            transition: all 0.3s ease;
+            background: rgba(0, 255, 0, 0.05);
+            border: 2px solid var(--neon-green);
+            padding: 2rem;
+            border-radius: 8px;
+            text-align: center;
             text-decoration: none;
-            color: #0f0;
+            color: var(--neon-green);
+            font-size: 1.5rem;
+            font-weight: 700;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            text-shadow: 0 0 10px var(--neon-green);
+        }
+
+        .tool::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent 0%,
+                rgba(255, 255, 255, 0.2) 50%,
+                transparent 100%
+            );
+            transition: 0.5s;
+        }
+
+        .tool:hover::before {
+            left: 100%;
         }
 
         .tool:hover {
-            background-color: #0f0;
-            color: #000;
-            transform: scale(1.1);
+            transform: translateY(-5px);
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.4);
+            animation: rainbowBorder 2s linear infinite;
+            border-width: 3px;
         }
 
         .back-link {
             position: absolute;
             bottom: 2rem;
-            color: #0f0;
+            color: var(--neon-green);
             text-decoration: none;
             font-size: 1.2rem;
+            padding: 0.8rem 1.5rem;
+            border: 2px solid var(--neon-green);
+            border-radius: 4px;
             transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
 
         .back-link:hover {
-            text-shadow: 0 0 10px #0f0, 0 0 20px #0f0;
+            animation: rainbowBorder 2s linear infinite;
+            transform: translateY(-3px);
+            text-shadow: 0 0 10px var(--neon-green);
+            border-width: 3px;
+        }
+
+        @keyframes rainbowBorder {
+            0% { border-color: #ff0000; box-shadow: 0 0 20px #ff0000; }
+            17% { border-color: #ff8800; box-shadow: 0 0 20px #ff8800; }
+            33% { border-color: #ffff00; box-shadow: 0 0 20px #ffff00; }
+            50% { border-color: #00ff00; box-shadow: 0 0 20px #00ff00; }
+            67% { border-color: #0088ff; box-shadow: 0 0 20px #0088ff; }
+            83% { border-color: #8800ff; box-shadow: 0 0 20px #8800ff; }
+            100% { border-color: #ff0000; box-shadow: 0 0 20px #ff0000; }
+        }
+
+        @keyframes glitch {
+            0% { transform: translate(0) }
+            20% { transform: translate(-2px, 2px) }
+            40% { transform: translate(-2px, -2px) }
+            60% { transform: translate(2px, 2px) }
+            80% { transform: translate(2px, -2px) }
+            100% { transform: translate(0) }
         }
 
         @media (max-width: 768px) {
             h1 {
                 font-size: 2.5rem;
+                letter-spacing: 0.3rem;
             }
 
-            .tools {
-                flex-direction: column;
-                align-items: center;
+            .tools-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+                padding: 0 1rem;
             }
 
             .tool {
-                margin-bottom: 1rem;
+                padding: 1.5rem;
+                font-size: 1.2rem;
             }
         }
     </style>
@@ -101,11 +197,14 @@
 <body>
     <canvas id="canvas"></canvas>
     <div class="content">
-        <h1>CODING TOOLS</h1>
-        <div class="tools">
+        <div class="glitch-container">
+            <h1>CODING TOOLS</h1>
+        </div>
+        <div class="tools-grid">
             <a href="https://code.isaiart.com/editor" target="_blank" class="tool">CODE EDITOR</a>
             <a href="https://code.isaiart.com/separator" target="_blank" class="tool">CODE SEPARATOR</a>
             <a href="https://code.isaiart.com/combiner" target="_blank" class="tool">CODE COMBINER</a>
+            <a href="https://isaiart.com/editor2" target="_blank" class="tool">CODE EDITOR V2</a>
         </div>
         <a href="https://isaiart.com" class="back-link">BACK TO ISAIART.COM</a>
     </div>
@@ -119,29 +218,69 @@
 
         // Create particles
         const particlesGeometry = new THREE.BufferGeometry();
-        const particlesCount = 5000;
+        const particlesCount = 15000; // Increased particle count
         const posArray = new Float32Array(particlesCount * 3);
 
         for (let i = 0; i < particlesCount * 3; i++) {
-            posArray[i] = (Math.random() - 0.5) * 5;
+            posArray[i] = (Math.random() - 0.5) * 15; // Increased spread
         }
 
         particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
 
-        const particlesMaterial = new THREE.PointsMaterial({
-            size: 0.005,
-            color: 0x00ff00
+        // Create multiple particle systems with different colors
+        const particleGroups = [
+            { color: 0x00ff00, size: 0.004, count: particlesCount },
+            { color: 0x00ff88, size: 0.003, count: particlesCount / 2 },
+            { color: 0x00ffff, size: 0.002, count: particlesCount / 3 }
+        ];
+
+        const particleMeshes = particleGroups.map(group => {
+            const geometry = new THREE.BufferGeometry();
+            const positions = new Float32Array(group.count * 3);
+            
+            for (let i = 0; i < group.count * 3; i++) {
+                positions[i] = (Math.random() - 0.5) * 15;
+            }
+            
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            
+            const material = new THREE.PointsMaterial({
+                size: group.size,
+                color: group.color,
+                transparent: true,
+                opacity: 0.8
+            });
+            
+            return new THREE.Points(geometry, material);
         });
 
-        const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
-        scene.add(particlesMesh);
+        particleMeshes.forEach(mesh => scene.add(mesh));
 
-        camera.position.z = 2;
+        camera.position.z = 4;
 
         // Animation
+        let mouseX = 0;
+        let mouseY = 0;
+        let targetRotationX = 0;
+        let targetRotationY = 0;
+
         function animate() {
             requestAnimationFrame(animate);
-            particlesMesh.rotation.y += 0.001;
+            
+            // Animate each particle system differently
+            particleMeshes.forEach((mesh, index) => {
+                mesh.rotation.x += 0.0003 * (index + 1);
+                mesh.rotation.y += 0.0005 * (index + 1);
+                
+                // Add wave-like motion
+                mesh.position.y = Math.sin(Date.now() * 0.001 * (index + 1)) * 0.1;
+                mesh.position.x = Math.cos(Date.now() * 0.001 * (index + 1)) * 0.1;
+                
+                // Mouse interaction
+                mesh.rotation.x += (targetRotationX - mesh.rotation.x) * 0.05;
+                mesh.rotation.y += (targetRotationY - mesh.rotation.y) * 0.05;
+            });
+            
             renderer.render(scene, camera);
         }
 
@@ -154,12 +293,13 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
 
-        // Mouse interaction
+        // Enhanced mouse interaction
         document.addEventListener('mousemove', (event) => {
-            const mouseX = (event.clientX / window.innerWidth) * 2 - 1;
-            const mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
-            particlesMesh.rotation.x = mouseY * 0.5;
-            particlesMesh.rotation.y = mouseX * 0.5;
+            mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+            mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+            
+            targetRotationX = mouseY * 0.2;
+            targetRotationY = mouseX * 0.2;
         });
     </script>
 </body>
