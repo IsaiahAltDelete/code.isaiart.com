@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Code Editor</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: #0f172a;
+            color: white;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px;
+            background: #1e293b;
+        }
+        .btn-group {
+            display: flex;
+            gap: 8px;
+        }
+        button {
+            background: none;
+            border: none;
+            color: white;
+            padding: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        button:hover {
+            background: #334155;
+        }
+        .search-panel {
+            background: #1e293b;
+            padding: 8px;
+            display: none;
+        }
+        .search-panel.active {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        input {
+            padding: 8px;
+            background: #334155;
+            border: none;
+            border-radius: 4px;
+            color: white;
+        }
+        .replace-btn {
+            background: #2563eb;
+            padding: 8px;
+        }
+        .replace-btn:hover {
+            background: #1d4ed8;
+        }
+        #editor {
+            flex: 1;
+            width: 100%;
+            padding: 16px;
+            background: #0f172a;
+            color: white;
+            border: none;
+            resize: none;
+            font-family: monospace;
+            box-sizing: border-box;
+        }
+        #editor:focus {
+            outline: none;
+        }
+        svg {
+            width: 20px;
+            height: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <div class="btn-group">
+            <button onclick="handleImport()" aria-label="Import">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            </button>
+            <button onclick="handleExport()" aria-label="Export">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            </button>
+            <button onclick="handlePreview()" aria-label="Preview">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+        </div>
+        <div class="btn-group">
+            <button onclick="handleCopy()" aria-label="Copy">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+            </button>
+            <button onclick="handleClear()" aria-label="Clear">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+            </button>
+            <button onclick="toggleSearch()" aria-label="Search">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <div id="searchPanel" class="search-panel">
+        <input type="text" id="searchInput" placeholder="Search">
+        <input type="text" id="replaceInput" placeholder="Replace">
+        <button class="replace-btn" onclick="handleReplace()">Replace All</button>
+    </div>
+
+    <textarea id="editor" placeholder="Enter your HTML code here..."></textarea>
+
+    <input type="file" id="fileInput" style="display: none" accept=".html,.txt">
+
+    <script>
+        const editor = document.getElementById('editor');
+        const searchPanel = document.getElementById('searchPanel');
+        const fileInput = document.getElementById('fileInput');
+        const searchInput = document.getElementById('searchInput');
+        const replaceInput = document.getElementById('replaceInput');
+
+        function handleImport() {
+            fileInput.click();
+        }
+
+        fileInput.onchange = function() {
+            const file = this.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                editor.value = e.target.result;
+            };
+            reader.readAsText(file);
+        };
+
+        function handleExport() {
+            const blob = new Blob([editor.value], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'code.html';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function handlePreview() {
+            const newWindow = window.open();
+            newWindow.document.write(editor.value);
+            newWindow.document.close();
+        }
+
+        function handleCopy() {
+            navigator.clipboard.writeText(editor.value);
+        }
+
+        function handleClear() {
+            editor.value = '';
+        }
+
+        function toggleSearch() {
+            searchPanel.classList.toggle('active');
+        }
+
+        function handleReplace() {
+            if (!searchInput.value) return;
+            editor.value = editor.value.replaceAll(
+                searchInput.value,
+                replaceInput.value
+            );
+        }
+    </script>
+</body>
+</html>
