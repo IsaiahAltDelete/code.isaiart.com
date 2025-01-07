@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Favicon Emoji Generator ⭐</title>
+    <style>
+        /* Reset some default styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body, html {
+            height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(270deg, #ff7e5f, #feb47b, #86a8e7, #91eae4);
+            background-size: 800% 800%;
+            animation: gradientBG 20s ease infinite;
+            padding: 20px;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+
+        p {
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .input-group {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 5px 0 0 5px;
+            outline: none;
+            width: 60px;
+            text-align: center;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 0 5px 5px 0;
+            cursor: pointer;
+            background-color: #ff5722;
+            color: #fff;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #e64a19;
+        }
+
+        textarea {
+            width: 100%;
+            height: 80px;
+            padding: 10px;
+            font-size: 1em;
+            border: none;
+            border-radius: 5px;
+            resize: none;
+            background: #333;
+            color: #0f0;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .copy-btn {
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #4caf50;
+            color: #fff;
+            transition: background-color 0.3s ease;
+        }
+
+        .copy-btn:hover {
+            background-color: #43a047;
+        }
+
+        /* Toast Notification Styles */
+        .toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 5px;
+            padding: 16px;
+            position: absolute;
+            z-index: 1;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.5s, bottom 0.5s;
+        }
+
+        .toast.show {
+            visibility: visible;
+            bottom: 50px;
+            opacity: 1;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+
+            input[type="text"], button {
+                font-size: 1em;
+                padding: 8px;
+            }
+
+            textarea {
+                height: 100px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Favicon Emoji Generator ⭐</h1>
+        <p>Enter any emoji below to generate the corresponding favicon code. Copy the code and place it inside the <code>&lt;head&gt;</code> section of your HTML.</p>
+        <div class="input-group">
+            <input type="text" id="emojiInput" maxlength="2" placeholder="😊">
+            <button onclick="generateFavicon()">Generate</button>
+        </div>
+        <textarea id="faviconCode" readonly></textarea>
+        <button class="copy-btn" onclick="copyCode()">Copy Code</button>
+
+        <!-- Toast Notification -->
+        <div id="toast" class="toast">Favicon code copied to clipboard!</div>
+    </div>
+
+    <script>
+        const emojiInput = document.getElementById('emojiInput');
+        const faviconCode = document.getElementById('faviconCode');
+        const toast = document.getElementById('toast');
+
+        function generateFavicon() {
+            let emoji = emojiInput.value.trim();
+            if (emoji.length === 0) {
+                emoji = ''; // No default emoji
+            }
+            // Encode the emoji for URL
+            const encodedEmoji = encodeURIComponent(emoji);
+            const svg = `<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>${encodedEmoji}</text></svg>`;
+            const dataUrl = `data:image/svg+xml,${svg}`;
+            const linkTag = `<link rel="icon" href="${dataUrl}">`;
+            faviconCode.value = linkTag;
+        }
+
+        function copyCode() {
+            if (faviconCode.value.trim() === '') {
+                showToast('Please generate the favicon code first!');
+                return;
+            }
+            faviconCode.select();
+            faviconCode.setSelectionRange(0, 99999); // For mobile devices
+            document.execCommand('copy');
+            showToast('Favicon code copied to clipboard!');
+        }
+
+        function showToast(message) {
+            toast.textContent = message;
+            toast.className = 'toast show';
+            setTimeout(() => {
+                toast.className = toast.className.replace('show', '');
+            }, 3000);
+        }
+
+        // Initialize with empty input
+        window.onload = () => {
+            faviconCode.value = '';
+        };
+    </script>
+</body>
+</html>
