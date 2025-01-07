@@ -11,6 +11,9 @@
         :root {
             --neon-green: #00ff00;
             --bg-color: #0a0a0a;
+            --transition-speed: 0.3s;
+            --tool-padding: 2rem;
+            --tool-font-size: 1.5rem;
         }
 
         * {
@@ -23,7 +26,7 @@
             font-family: 'JetBrains Mono', monospace;
             background-color: var(--bg-color);
             color: var(--neon-green);
-            overflow: hidden;
+            overflow-x: hidden;
             height: 100%;
             width: 100%;
         }
@@ -34,11 +37,14 @@
             left: 0;
             z-index: 0;
             opacity: 0.8;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .content {
             position: relative;
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -50,6 +56,7 @@
         .glitch-container {
             position: relative;
             margin-bottom: 4rem;
+            text-align: center;
         }
 
         h1 {
@@ -71,11 +78,11 @@
             top: 0;
             color: var(--neon-green);
             text-shadow: 0 0 15px var(--neon-green);
+            opacity: 0.7;
         }
 
         h1::before {
             animation: glitch 3s infinite;
-            opacity: 0.7;
             z-index: -1;
         }
 
@@ -87,27 +94,32 @@
 
         .tools-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 2rem;
-            max-width: 1000px;
+            max-width: 1200px;
             width: 100%;
             margin: 0 auto;
+            padding: 0 1rem;
         }
 
         .tool {
             background: rgba(0, 255, 0, 0.05);
             border: 2px solid var(--neon-green);
-            padding: 2rem;
+            padding: var(--tool-padding);
             border-radius: 8px;
             text-align: center;
             text-decoration: none;
             color: var(--neon-green);
-            font-size: 1.5rem;
+            font-size: var(--tool-font-size);
             font-weight: 700;
             position: relative;
             overflow: hidden;
-            transition: all 0.3s ease;
+            transition: all var(--transition-speed) ease;
             text-shadow: 0 0 10px var(--neon-green);
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .tool::before {
@@ -138,15 +150,14 @@
         }
 
         .back-link {
-            position: absolute;
-            bottom: 2rem;
+            margin-top: 4rem;
             color: var(--neon-green);
             text-decoration: none;
             font-size: 1.2rem;
             padding: 0.8rem 1.5rem;
             border: 2px solid var(--neon-green);
             border-radius: 4px;
-            transition: all 0.3s ease;
+            transition: all var(--transition-speed) ease;
             text-transform: uppercase;
             letter-spacing: 2px;
         }
@@ -169,12 +180,19 @@
         }
 
         @keyframes glitch {
-            0% { transform: translate(0) }
-            20% { transform: translate(-2px, 2px) }
-            40% { transform: translate(-2px, -2px) }
-            60% { transform: translate(2px, 2px) }
-            80% { transform: translate(2px, -2px) }
-            100% { transform: translate(0) }
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+
+        @media (max-width: 1024px) {
+            h1 {
+                font-size: 4rem;
+                letter-spacing: 0.4rem;
+            }
         }
 
         @media (max-width: 768px) {
@@ -184,14 +202,44 @@
             }
 
             .tools-grid {
-                grid-template-columns: 1fr;
-                gap: 1rem;
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 1.5rem;
                 padding: 0 1rem;
             }
 
             .tool {
                 padding: 1.5rem;
                 font-size: 1.2rem;
+                min-height: 80px;
+            }
+
+            .back-link {
+                font-size: 1rem;
+                padding: 0.6rem 1.2rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 2rem;
+                letter-spacing: 0.2rem;
+            }
+
+            .tools-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+                padding: 0 0.5rem;
+            }
+
+            .tool {
+                padding: 1rem;
+                font-size: 1rem;
+                min-height: 60px;
+            }
+
+            .back-link {
+                font-size: 0.9rem;
+                padding: 0.5rem 1rem;
             }
         }
     </style>
@@ -203,12 +251,16 @@
             <h1>CODING TOOLS</h1>
         </div>
         <div class="tools-grid">
-            <a href="https://code.isaiart.com/editor" target="_blank" class="tool">CODE EDITOR</a>
-            <a href="https://code.isaiart.com/separator" target="_blank" class="tool">CODE SEPARATOR</a>
-            <a href="https://code.isaiart.com/combiner" target="_blank" class="tool">CODE COMBINER</a>
-            <a href="https://isaiart.com/editor2" target="_blank" class="tool">CODE EDITOR V2</a>
+            <a href="https://code.isaiart.com/editor" target="_blank" class="tool" aria-label="Code Editor">CODE EDITOR</a>
+            <a href="https://code.isaiart.com/separator" target="_blank" class="tool" aria-label="Code Separator">CODE SEPARATOR</a>
+            <a href="https://code.isaiart.com/combiner" target="_blank" class="tool" aria-label="Code Combiner">CODE COMBINER</a>
+            <a href="https://isaiart.com/editor2" target="_blank" class="tool" aria-label="Code Editor V2">CODE EDITOR V2</a>
+            <!-- Added Mobile Coding Link -->
+            <a href="https://code.isaiart.com/mobile" target="_blank" class="tool" aria-label="Mobile Coding">MOBILE CODING</a>
+            <!-- Added FAVICON GENERATOR Link -->
+            <a href="https://code.isaiart.com/favicon" target="_blank" class="tool" aria-label="Favicon Generator">FAVICON GENERATOR</a>
         </div>
-        <a href="https://isaiart.com" class="back-link">BACK TO ISAIART.COM</a>
+        <a href="https://isaiart.com" class="back-link" aria-label="Back to IsaiArt.com">BACK TO ISAIART.COM</a>
     </div>
 
     <script>
@@ -292,6 +344,18 @@
             targetRotationX = mouseY * 0.2;
             targetRotationY = mouseX * 0.2;
         });
+
+        // Touch interaction for mobile devices
+        document.addEventListener('touchmove', (event) => {
+            if (event.touches.length > 0) {
+                const touch = event.touches[0];
+                mouseX = (touch.clientX / window.innerWidth) * 2 - 1;
+                mouseY = -(touch.clientY / window.innerHeight) * 2 + 1;
+                
+                targetRotationX = mouseY * 0.2;
+                targetRotationY = mouseX * 0.2;
+            }
+        }, { passive: true });
     </script>
 </body>
 </html>
