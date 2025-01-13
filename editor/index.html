@@ -2,285 +2,521 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <meta name="theme-color" content="#1e1e1e">
     <title>Code Editor</title>
-    <link rel="icon" href="https://github.com/IsaiahAltDelete/code.isaiart.com/blob/main/favicon.ico?raw=true">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/htmlmixed/htmlmixed.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/search/search.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/search/searchcursor.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/scroll/simplescrollbars.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/search/match-highlighter.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/dialog/dialog.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/selection/active-line.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/dialog/dialog.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/closebrackets.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/closetag.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/matchbrackets.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/matchtags.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/xml-fold.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/show-hint.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/xml-hint.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/html-hint.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prettier/2.8.8/standalone.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prettier/2.8.8/parser-html.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/dracula.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/dialog/dialog.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/search/matchesonscrollbar.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/dialog/dialog.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/show-hint.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #1e1e1e;
+            color: #d4d4d4;
             height: 100vh;
             display: flex;
-            color: #ffffff;
-            overflow: hidden;
-        }
-        .container {
-            display: flex;
-            flex: 1;
-            padding: 20px;
-            gap: 20px;
-        }
-        .editor-pane, .preview-pane {
-            flex: 1;
-            display: flex;
             flex-direction: column;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-            overflow: hidden;
         }
-        .CodeMirror {
-            flex: 1;
-            background: rgba(0, 0, 0, 0.1) !important;
-            backdrop-filter: blur(5px);
-            height: auto;
-            font-size: 16px;
-            line-height: 1.5;
-            padding: 10px;
-        }
-        .CodeMirror-gutters {
-            background: rgba(0, 0, 0, 0.2) !important;
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .preview-pane iframe {
-            flex: 1;
-            border: none;
-            background-color: white;
-        }
-        .controls {
+
+        .toolbar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
             display: flex;
             flex-wrap: wrap;
-            justify-content: space-between;
-            padding: 15px;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(5px);
-            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            gap: 12px;
+            padding: 12px 20px;
+            background-color: #252526;
+            border-bottom: 1px solid #333;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         }
-        button, select {
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            padding: 10px 20px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
+
+        @media (max-width: 600px) {
+            .toolbar {
+                padding: 8px 12px;
+                gap: 8px;
+            }
+        }
+
+        .divider {
+            width: 1px;
+            height: 24px;
+            background-color: #404040;
+            margin: 0 4px;
+        }
+
+        .editor-container {
+            flex-grow: 1;
+            height: calc(100vh - 48px);
+        }
+
+        .CodeMirror {
+            height: 100%;
+            font-family: 'Fira Code', 'Consolas', monospace;
             font-size: 14px;
-            margin: 4px 2px;
+            line-height: 1.6;
+            background: #1e1e1e !important;
+        }
+
+        /* Custom theme to match the reference image */
+        .cm-s-custom.CodeMirror { background: #1e1e1e; color: #e0e0e0; }
+        .cm-s-custom .CodeMirror-gutters { background: #1e1e1e; border-right: 1px solid #333; }
+        .cm-s-custom .CodeMirror-linenumber { color: #666; }
+        
+        /* HTML Tags */
+        .cm-s-custom .cm-tag { color: #ff6b6b; }
+        .cm-s-custom .cm-bracket { color: #ff6b6b; }
+        
+        /* Attributes */
+        .cm-s-custom .cm-attribute { color: #4ec9b0; }
+        
+        /* Strings */
+        .cm-s-custom .cm-string { color: #ce9178; }
+        
+        /* Comments */
+        .cm-s-custom .cm-comment { color: #6a9955; font-style: italic; }
+        
+        /* Other syntax elements */
+        .cm-s-custom .cm-meta { color: #808080; }
+        .cm-s-custom .cm-qualifier { color: #4ec9b0; }
+        .cm-s-custom .cm-property { color: #9cdcfe; }
+        .cm-s-custom .cm-variable { color: #9cdcfe; }
+        .cm-s-custom .cm-number { color: #b5cea8; }
+        .cm-s-custom .cm-operator { color: #d4d4d4; }
+        
+        /* Enhanced styling for the editor */
+        .CodeMirror {
+            font-weight: 500;
+            padding: 10px 0;
+            letter-spacing: 0.3px;
+        }
+
+        .CodeMirror-lines {
+            padding: 10px 0;
+        }
+
+        .CodeMirror pre.CodeMirror-line {
+            padding: 0 15px;
+        }
+
+        .CodeMirror-gutters {
+            border-right: 1px solid #333;
+            background-color: #1e1e1e;
+            padding-right: 10px;
+            width: 50px;
+        }
+
+        .CodeMirror-linenumber {
+            padding-left: 15px;
+            font-weight: 500;
+        }
+
+        /* Search widget styling */
+        .search-widget {
+            position: absolute;
+            top: 50px;
+            right: 20px;
+            background: #252526;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #404040;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            display: none;
+        }
+
+        .search-widget input {
+            width: 100%;
+            padding: 8px 12px;
+            margin-bottom: 10px;
+            border: 1px solid #404040;
+            border-radius: 4px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            font-size: 14px;
+        }
+
+        .search-widget button {
+            padding: 6px 12px;
+            margin: 4px;
+            background: #333;
+            border: 1px solid #404040;
+            border-radius: 4px;
+            color: #d4d4d4;
             cursor: pointer;
-            border-radius: 10px;
-            backdrop-filter: blur(5px);
-            transition: all 0.3s ease;
+            transition: all 0.2s;
         }
-        button:hover, select:hover {
-            background: rgba(255, 255, 255, 0.3);
+
+        .search-widget button:hover {
+            background: #404040;
         }
-        select {
-            background: rgba(52, 152, 219, 0.3);
+
+        .search-info {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #888;
         }
-        .theme-switch {
+
+        /* Mobile responsiveness */
+        @media (max-width: 600px) {
+            .CodeMirror {
+                font-size: 13px;
+            }
+            
+            .search-widget {
+                right: 10px;
+                left: 10px;
+                width: auto;
+            }
+        }
+
+        /* Selection */
+        .cm-s-custom .CodeMirror-selected { background: #264f78 !important; }
+        .cm-s-custom .CodeMirror-selectedtext { background: #264f78 !important; }
+        
+        /* Active line */
+        .cm-s-custom .CodeMirror-activeline-background { background: #2c2c2c; }
+        .cm-s-custom .CodeMirror-activeline-gutter { background: #2c2c2c; }
+        
+        /* Matching brackets */
+        .cm-s-custom .CodeMirror-matchingbracket { 
+            background: #3b514d;
+            color: #fff !important;
+            border-bottom: 1px solid #4ec9b0;
+        }
+
+        .tool-button {
+            background: #333;
+            border: 1px solid #404040;
+            color: #d4d4d4;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            cursor: pointer;
             display: flex;
             align-items: center;
-        }
-        .switch {
+            justify-content: center;
+            transition: all 0.2s ease;
             position: relative;
-            display: inline-block;
-            width: 60px;
-            height: 34px;
-            margin: 0 10px;
+            overflow: hidden;
         }
-        .switch input {
+
+        .tool-button:hover {
+            background-color: #404040;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .tool-button:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+
+        .tool-button i {
+            font-size: 18px;
+            transition: transform 0.2s ease;
+        }
+
+        .tool-button:hover i {
+            transform: scale(1.1);
+        }
+
+        @media (max-width: 600px) {
+            .tool-button {
+                width: 36px;
+                height: 36px;
+            }
+            
+            .tool-button i {
+                font-size: 16px;
+            }
+        }
+
+        .tooltip {
+            position: relative;
+        }
+
+        .tooltip::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 4px 8px;
+            background-color: #333;
+            color: #fff;
+            font-size: 12px;
+            border-radius: 4px;
+            white-space: nowrap;
             opacity: 0;
-            width: 0;
-            height: 0;
+            visibility: hidden;
+            transition: opacity 0.2s;
         }
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(204, 204, 204, 0.3);
-            transition: .4s;
-            border-radius: 34px;
+
+        .tooltip:hover::after {
+            opacity: 1;
+            visibility: visible;
         }
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 26px;
-            width: 26px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
+
+        .status {
+            padding: 4px 8px;
+            margin-left: auto;
+            border-radius: 4px;
+            font-size: 13px;
+            display: none;
         }
-        input:checked + .slider {
-            background-color: rgba(33, 150, 243, 0.3);
+
+        .success {
+            background-color: #155724;
+            color: #d4edda;
+            display: inline-block;
         }
-        input:checked + .slider:before {
-            transform: translateX(26px);
+
+        .error {
+            background-color: #721c24;
+            color: #f8d7da;
+            display: inline-block;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="editor-pane">
-            <textarea id="code-editor"></textarea>
-            <div class="controls">
-                <select id="language-select">
-                    <option value="htmlmixed">HTML</option>
-                    <option value="css">CSS</option>
-                    <option value="javascript">JavaScript</option>
-                </select>
-                <button onclick="copyCode()">Copy Code</button>
-                <button onclick="formatCode()">Format Code</button>
-                <button onclick="saveAsHtml()">Save as HTML</button>
-                <button onclick="openPreview()">Preview</button>
-                <input type="file" id="import-file" style="display: none;" onchange="importCode()">
-                <button onclick="document.getElementById('import-file').click()">Import</button>
-                <button onclick="searchReplace()">Search/Replace</button>
-                <div class="theme-switch">
-                    <span>Eclipse</span>
-                    <label class="switch">
-                        <input type="checkbox" id="theme-toggle" checked>
-                        <span class="slider"></span>
-                    </label>
-                    <span>Dracula</span>
-                </div>
-            </div>
-        </div>
-        <div class="preview-pane">
-            <iframe id="preview-frame"></iframe>
-        </div>
+    <div class="toolbar">
+        <button class="tool-button tooltip" data-tooltip="New File" onclick="newFile()">
+            <i class="fas fa-file"></i>
+        </button>
+        <button class="tool-button tooltip" data-tooltip="Save" onclick="downloadCode()">
+            <i class="fas fa-save"></i>
+        </button>
+        <div class="divider"></div>
+        <button class="tool-button tooltip" data-tooltip="Copy" onclick="copyCode()">
+            <i class="fas fa-copy"></i>
+        </button>
+        <button class="tool-button tooltip" data-tooltip="Paste" onclick="pasteCode()">
+            <i class="fas fa-paste"></i>
+        </button>
+        <button class="tool-button tooltip" data-tooltip="Clear All" onclick="clearCode()">
+            <i class="fas fa-trash-alt"></i>
+        </button>
+        <div class="divider"></div>
+        <button class="tool-button tooltip" data-tooltip="Search (Ctrl+F)" onclick="searchCode()">
+            <i class="fas fa-search"></i>
+        </button>
+        <button class="tool-button tooltip" data-tooltip="Format Code" onclick="formatCode()">
+            <i class="fas fa-align-left"></i>
+        </button>
+        <button class="tool-button tooltip" data-tooltip="Open in New Tab" onclick="openInNewTab()">
+            <i class="fas fa-external-link-alt"></i>
+        </button>
+        <span id="status" class="status"></span>
+    </div>
+    <div class="editor-container">
+        <textarea id="editor"></textarea>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/htmlmixed/htmlmixed.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/css/css.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/search/search.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/search/searchcursor.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/dialog/dialog.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/scroll/annotatescrollbar.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/search/matchesonscrollbar.min.js"></script>
     <script>
-        let editor;
-        const preview = document.getElementById('preview-frame');
-        const languageSelect = document.getElementById('language-select');
-        const themeToggle = document.getElementById('theme-toggle');
-
-        let code = {
-            htmlmixed: '',
-            css: '',
-            javascript: ''
-        };
-
-        function initCodeMirror() {
-            editor = CodeMirror.fromTextArea(document.getElementById('code-editor'), {
-                lineNumbers: true,
-                theme: 'dracula',
-                mode: 'htmlmixed',
-                autofocus: true,
-                lineWrapping: true
-            });
-
-            editor.on('change', function() {
-                code[languageSelect.value] = editor.getValue();
-                updatePreview();
-            });
-        }
-
-        function updatePreview() {
-            const combinedCode = `
-                <html>
-                    <head>
-                        <style>${code.css}</style>
-                    </head>
-                    <body>
-                        ${code.htmlmixed}
-                        <script>${code.javascript}<\/script>
-                    </body>
-                </html>
+        // Create custom search widget
+        function createSearchWidget() {
+            const widget = document.createElement('div');
+            widget.className = 'search-widget';
+            widget.innerHTML = `
+                <input type="text" placeholder="Search..." class="search-input">
+                <input type="text" placeholder="Replace with..." class="replace-input">
+                <div class="search-buttons">
+                    <button onclick="findNext()">Next</button>
+                    <button onclick="findPrev()">Previous</button>
+                    <button onclick="replace()">Replace</button>
+                    <button onclick="replaceAll()">Replace All</button>
+                    <button onclick="closeSearch()">Close</button>
+                </div>
+                <div class="search-info"></div>
             `;
-            preview.srcdoc = combinedCode;
+            return widget;
         }
 
-        languageSelect.addEventListener('change', function() {
-            editor.setOption('mode', this.value);
-            editor.setValue(code[this.value]);
+        // Initialize CodeMirror
+        const editor = CodeMirror.fromTextArea(document.getElementById('editor'), {
+            // Enhanced settings for better visuals and mobile support
+
+            mode: 'htmlmixed',
+            lineNumbers: true,
+            lineWrapping: true,
+            styleActiveLine: true,
+            styleActiveSelected: true,
+            scrollbarStyle: 'overlay',
+            viewportMargin: Infinity,
+            matchBrackets: true,
+            highlightSelectionMatches: {showToken: /\w/, annotateScrollbar: true},
+            tabSize: 2,
+            indentUnit: 2,
+            cursorHeight: 1,
+            fontWeight: '500',
+            theme: 'custom',
+            lineNumbers: true,
+            autoCloseTags: true,
+            autoCloseBrackets: true,
+            matchBrackets: true,
+            indentUnit: 2,
+            tabSize: 2,
+            lineWrapping: true,
+            foldGutter: true,
+
+            // Auto-completion and pairing features
+            autoCloseBrackets: {
+                pairs: '()[]{}""\'\'``',
+                explode: '{}[]()<>'
+            },
+            autoCloseTags: true,
+            matchBrackets: true,
+            matchTags: {bothTags: true},
+            
+            // Code folding
+            foldGutter: true,
+            foldOptions: {
+                widget: '...'
+            },
+            
+            // Auto-completion hints
+            extraKeys: {
+                'Ctrl-Space': 'autocomplete',
+                'Ctrl-/': 'toggleComment',
+                'Ctrl-F': 'search',
+                'Tab': function(cm) {
+                    if (cm.somethingSelected()) {
+                        cm.indentSelection('add');
+                    } else {
+                        cm.replaceSelection('  ', 'end');
+                    }
+                },
+                'Ctrl-Enter': function(cm) {
+                    openInNewTab();
+                }
+            },
+            gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter'],
+            extraKeys: {
+                'Ctrl-Space': 'autocomplete',
+                'Ctrl-F': 'search',
+                'Tab': function(cm) {
+                    if (cm.somethingSelected()) {
+                        cm.indentSelection('add');
+                    } else {
+                        cm.replaceSelection('  ', 'end');
+                    }
+                }
+            }
         });
 
-        function copyCode() {
-            navigator.clipboard.writeText(editor.getValue());
+        function showStatus(message, isError = false) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = 'status ' + (isError ? 'error' : 'success');
+            setTimeout(() => {
+                status.className = 'status';
+            }, 3000);
         }
 
-        function formatCode() {
-            // This is a placeholder. Implement a proper code formatter here.
-            alert('Code formatting not implemented in this demo.');
-        }
-
-        function saveAsHtml() {
-            const timestamp = new Date().toLocaleString('en-US', { 
-                year: 'numeric', month: '2-digit', day: '2-digit',
-                hour: '2-digit', minute: '2-digit', hour12: false 
-            }).replace(/[/:]/g, '-');
-            const blob = new Blob([preview.srcdoc], { type: 'text/html' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `code_${timestamp}.html`;
-            link.click();
-        }
-
-        function openPreview() {
-            const newWindow = window.open();
-            newWindow.document.write(preview.srcdoc);
-        }
-
-        function importCode() {
-            const file = document.getElementById('import-file').files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    editor.setValue(e.target.result);
-                    code[languageSelect.value] = e.target.result;
-                    updatePreview();
-                };
-                reader.readAsText(file);
+        function newFile() {
+            if (confirm('Create new file? All unsaved changes will be lost.')) {
+                editor.setValue('');
+                showStatus('New file created');
             }
         }
 
-        function searchReplace() {
+        function copyCode() {
+            const code = editor.getValue();
+            navigator.clipboard.writeText(code)
+                .then(() => showStatus('Code copied to clipboard'))
+                .catch(err => showStatus('Failed to copy code: ' + err.message, true));
+        }
+
+        async function pasteCode() {
+            try {
+                const text = await navigator.clipboard.readText();
+                editor.replaceSelection(text);
+                showStatus('Code pasted from clipboard');
+            } catch (err) {
+                showStatus('Failed to paste code: ' + err.message, true);
+            }
+        }
+
+        function clearCode() {
+            if (confirm('Clear all code? This cannot be undone.')) {
+                editor.setValue('');
+                showStatus('Code cleared');
+            }
+        }
+
+        function searchCode() {
             CodeMirror.commands.find(editor);
         }
 
-        themeToggle.addEventListener('change', function() {
-            if (this.checked) {
-                editor.setOption('theme', 'dracula');
-            } else {
-                editor.setOption('theme', 'default');
+        function formatCode() {
+            try {
+                const formatted = prettier.format(editor.getValue(), {
+                    parser: 'html',
+                    plugins: prettierPlugins,
+                    printWidth: 80,
+                    tabWidth: 2,
+                    useTabs: false,
+                    htmlWhitespaceSensitivity: 'css'
+                });
+                editor.setValue(formatted);
+                showStatus('Code formatted');
+            } catch (error) {
+                showStatus('Error formatting code: ' + error.message, true);
             }
-        });
-
-        // Dynamic background
-        function updateGradient() {
-            const hue1 = (Date.now() / 50) % 360;
-            const hue2 = (hue1 + 60) % 360;
-            document.body.style.background = `linear-gradient(45deg, hsl(${hue1}, 100%, 75%) 0%, hsl(${hue2}, 100%, 75%) 100%)`;
-            requestAnimationFrame(updateGradient);
         }
 
-        // Initialize
-        initCodeMirror();
-        updatePreview();
-        updateGradient();
+        function openInNewTab() {
+            const code = editor.getValue();
+            const blob = new Blob([code], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            window.open(url, '_blank');
+            URL.revokeObjectURL(url);
+        }
+
+        function downloadCode() {
+            const blob = new Blob([editor.getValue()], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'code.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showStatus('Code downloaded');
+        }
     </script>
 </body>
 </html>
