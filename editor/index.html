@@ -560,8 +560,6 @@
         // LocalStorage and Preview functionality
         let isPreviewVisible = false;
         const STORAGE_KEY = 'code_editor_content';
-        const AUTOSAVE_DELAY = 1000; // 1 second
-        let autosaveTimeout;
 
         // Load saved content on startup
         function loadSavedContent() {
@@ -571,14 +569,10 @@
             }
         }
 
-        // Auto-save content
+        // Set up immediate autosave
         function setupAutosave() {
             editor.on('change', () => {
-                clearTimeout(autosaveTimeout);
-                autosaveTimeout = setTimeout(() => {
-                    localStorage.setItem(STORAGE_KEY, editor.getValue());
-                    showStatus('Changes saved');
-                }, AUTOSAVE_DELAY);
+                localStorage.setItem(STORAGE_KEY, editor.getValue());
             });
         }
 
