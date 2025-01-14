@@ -295,6 +295,35 @@
             color: var(--text-secondary);
         }
 
+        .stats {
+            margin-left: auto;
+            display: flex;
+            gap: 16px;
+            color: var(--text-primary);
+            font-size: 13px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+
+        .stat-item i {
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        @media (max-width: 600px) {
+            .stats {
+                display: none;
+            }
+        }
+
         /* Custom scrollbar styling */
         .CodeMirror-simplescroll-horizontal,
         .CodeMirror-simplescroll-vertical {
@@ -551,6 +580,17 @@
             <i class="fas fa-external-link-alt"></i>
         </button>
         <span id="status" class="status"></span>
+            <div class="stats">
+                <span class="stat-item">
+                    <i class="fas fa-align-left"></i>
+                    <span id="word-count">0</span> words
+                </span>
+                <span class="stat-item">
+                    <i class="fas fa-list"></i>
+                    <span id="line-count">0</span> lines
+                </span>
+            </div>
+        </span>
     </div>
     <div class="editor-container">
         <textarea id="editor"></textarea>
@@ -573,7 +613,25 @@
         function setupAutosave() {
             editor.on('change', () => {
                 localStorage.setItem(STORAGE_KEY, editor.getValue());
+                updateStats();
             });
+        }
+
+        // Update word and line counts
+        function updateStats() {
+            const content = editor.getValue();
+            const wordCount = content
+                .replace(/<[^>]*>/g, '') // Remove HTML tags
+                .replace(/[^a-zA-Z0-9]+/g, ' ') // Replace non-alphanumeric with space
+                .trim()
+                .split(/\s+/)
+                .filter(word => word.length > 0)
+                .length;
+            
+            const lineCount = editor.lineCount();
+            
+            document.getElementById('word-count').textContent = wordCount;
+            document.getElementById('line-count').textContent = lineCount;
         }
 
         // Toggle preview panel
@@ -626,6 +684,7 @@
             loadSavedContent();
             setupAutosave();
             initializeTheme();
+            updateStats(); // Initial stats update
             
             // Update preview when code changes
             editor.on('change', () => {
