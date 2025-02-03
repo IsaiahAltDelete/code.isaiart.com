@@ -1,12 +1,11 @@
-<html>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <meta name="theme-color" content="#1e1e1e">
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
     <title>Code Editor</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/xml/xml.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
@@ -747,7 +746,7 @@
             // Auto-completion and pairing features
             autoCloseBrackets: {
                 pairs: '()[]{}""\'\'``',
-                explode: '{}[]()<>' 
+                explode: '{}[]()<>'
             },
             autoCloseTags: true,
             matchBrackets: true,
