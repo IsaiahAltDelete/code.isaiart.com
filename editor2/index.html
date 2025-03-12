@@ -259,6 +259,40 @@
             background-color: var(--editor-bg);
         }
 
+        /* Custom scrollbars */
+        .editor::-webkit-scrollbar, 
+        .tabs::-webkit-scrollbar,
+        .preview::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        .editor::-webkit-scrollbar-track, 
+        .tabs::-webkit-scrollbar-track,
+        .preview::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .editor::-webkit-scrollbar-thumb, 
+        .tabs::-webkit-scrollbar-thumb,
+        .preview::-webkit-scrollbar-thumb {
+            background: rgba(128, 128, 128, 0.2);
+            border-radius: 10px;
+        }
+
+        .editor::-webkit-scrollbar-thumb:hover, 
+        .tabs::-webkit-scrollbar-thumb:hover,
+        .preview::-webkit-scrollbar-thumb:hover {
+            background: rgba(128, 128, 128, 0.4);
+        }
+
+        /* For Firefox */
+        .editor, .tabs, .preview {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(128, 128, 128, 0.2) transparent;
+        }
+
+        /* Search panel */
         .toolbar {
             padding: 12px 16px;
             border-bottom: 1px solid var(--border-color);
@@ -266,6 +300,15 @@
             gap: 12px;
             flex-wrap: wrap;
             background-color: var(--bg-color);
+            overflow: hidden;
+            max-height: 0;
+            transition: max-height 0.3s ease-in-out, padding 0.3s ease-in-out;
+            padding: 0 16px;
+        }
+
+        .toolbar.visible {
+            max-height: 100px;
+            padding: 12px 16px;
         }
 
         .search-container {
@@ -427,13 +470,34 @@
     <div class="header">
         <div class="app-title"></div>
         <div class="app-buttons">
-            <div class="toggle-switch">
-                <span class="toggle-label">Dark Mode</span>
-                <label class="switch">
-                    <input type="checkbox" id="theme-toggle">
-                    <span class="slider"></span>
-                </label>
-            </div>
+            <button class="button" id="search-toggle-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 5px;">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                Search
+            </button>
+            <button class="button" id="copy-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 5px;">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                Copy
+            </button>
+            <button class="button" id="paste-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 5px;">
+                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                    <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                </svg>
+                Paste
+            </button>
+            <button class="button" id="clear-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 5px;">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+                Clear
+            </button>
             <button class="button" id="format-btn">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 5px;">
                     <path d="M21 10H3M21 6H3M21 14H3M21 18H3"></path>
@@ -455,6 +519,13 @@
                 </svg>
                 Save
             </button>
+            <div class="toggle-switch">
+                <span class="toggle-label">Dark Mode</span>
+                <label class="switch">
+                    <input type="checkbox" id="theme-toggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
         </div>
     </div>
 
@@ -528,6 +599,19 @@
             </div>
         </div>
     </div>
+    
+    <div class="modal" id="rename-modal">
+        <div class="modal-content">
+            <h3 class="modal-title">Rename Tab</h3>
+            <div class="modal-form">
+                <input type="text" class="modal-input" id="rename-input" placeholder="New Tab Name">
+                <div class="modal-buttons">
+                    <button class="button" id="cancel-rename">Cancel</button>
+                    <button class="button" id="confirm-rename">Rename</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         // DOM Elements
@@ -558,6 +642,9 @@
         const searchNextButton = document.getElementById('search-next-btn');
         const replaceButton = document.getElementById('replace-btn');
         const replaceAllButton = document.getElementById('replace-all-btn');
+        const copyButton = document.getElementById('copy-btn');
+        const pasteButton = document.getElementById('paste-btn');
+        const clearButton = document.getElementById('clear-btn');
 
         // State variables
         let tabsData = [];
@@ -599,6 +686,13 @@
             themeToggle.addEventListener('change', () => {
                 document.body.classList.toggle('dark-mode');
                 localStorage.setItem('dark-mode', themeToggle.checked);
+            });
+
+            // Search toggle
+            const searchToggleBtn = document.getElementById('search-toggle-btn');
+            const toolbar = document.querySelector('.toolbar');
+            searchToggleBtn.addEventListener('click', () => {
+                toolbar.classList.toggle('visible');
             });
 
             // Editor events
@@ -650,6 +744,35 @@
                 }
             });
 
+            // Tab renaming
+            const renameModal = document.getElementById('rename-modal');
+            const renameInput = document.getElementById('rename-input');
+            const confirmRenameButton = document.getElementById('confirm-rename');
+            const cancelRenameButton = document.getElementById('cancel-rename');
+            let tabToRename = -1;
+
+            confirmRenameButton.addEventListener('click', () => {
+                if (tabToRename >= 0 && tabToRename < tabsData.length) {
+                    const newName = renameInput.value.trim() || tabsData[tabToRename].name;
+                    tabsData[tabToRename].name = newName;
+                    saveTabs();
+                    renderTabs();
+                }
+                renameModal.style.display = 'none';
+            });
+
+            cancelRenameButton.addEventListener('click', () => {
+                renameModal.style.display = 'none';
+            });
+
+            renameInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    confirmRenameButton.click();
+                } else if (e.key === 'Escape') {
+                    cancelRenameButton.click();
+                }
+            });
+
             // Format button
             formatButton.addEventListener('click', formatCode);
 
@@ -692,6 +815,47 @@
                     searchButton.click();
                 }
             });
+            
+            // Copy, Paste, Clear
+            copyButton.addEventListener('click', () => {
+                editor.select();
+                document.execCommand('copy');
+                // For modern browsers
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(editor.value);
+                }
+            });
+            
+            pasteButton.addEventListener('click', async () => {
+                try {
+                    // For modern browsers
+                    if (navigator.clipboard && navigator.clipboard.readText) {
+                        const text = await navigator.clipboard.readText();
+                        const start = editor.selectionStart;
+                        const end = editor.selectionEnd;
+                        editor.value = editor.value.substring(0, start) + text + editor.value.substring(end);
+                        editor.selectionStart = editor.selectionEnd = start + text.length;
+                        updateLineNumbers();
+                        updateStats();
+                        updateTabContent();
+                    } else {
+                        editor.focus();
+                        document.execCommand('paste');
+                    }
+                } catch (err) {
+                    console.error('Failed to read clipboard contents:', err);
+                    alert('Could not access clipboard. Please use keyboard shortcut Ctrl+V or Cmd+V instead.');
+                }
+            });
+            
+            clearButton.addEventListener('click', () => {
+                if (confirm('Are you sure you want to clear all content?')) {
+                    editor.value = '';
+                    updateLineNumbers();
+                    updateStats();
+                    updateTabContent();
+                }
+            });
         }
 
         function createNewTab(name) {
@@ -714,6 +878,8 @@
                     <span class="tab-name">${tab.name}</span>
                     <span class="tab-close">×</span>
                 `;
+                
+                // Handle tab click
                 tabElement.addEventListener('click', (e) => {
                     if (e.target.className === 'tab-close') {
                         closeTab(index);
@@ -721,8 +887,28 @@
                         switchToTab(index);
                     }
                 });
+                
+                // Handle tab double-click for renaming
+                tabElement.querySelector('.tab-name').addEventListener('dblclick', (e) => {
+                    e.stopPropagation();
+                    showRenameModal(index);
+                });
+                
                 tabs.appendChild(tabElement);
             });
+        }
+
+        function showRenameModal(index) {
+            if (index < 0 || index >= tabsData.length) return;
+            
+            const renameModal = document.getElementById('rename-modal');
+            const renameInput = document.getElementById('rename-input');
+            
+            tabToRename = index;
+            renameInput.value = tabsData[index].name;
+            renameModal.style.display = 'flex';
+            renameInput.focus();
+            renameInput.select();
         }
 
         function switchToTab(index) {
