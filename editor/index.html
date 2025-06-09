@@ -580,17 +580,16 @@
             <i class="fas fa-external-link-alt"></i>
         </button>
         <span id="status" class="status"></span>
-            <div class="stats">
-                <span class="stat-item">
-                    <i class="fas fa-align-left"></i>
-                    <span id="word-count">0</span> words
-                </span>
-                <span class="stat-item">
-                    <i class="fas fa-list"></i>
-                    <span id="line-count">0</span> lines
-                </span>
-            </div>
-        </span>
+        <div class="stats">
+            <span class="stat-item">
+                <i class="fas fa-align-left"></i>
+                <span id="word-count">0</span> words
+            </span>
+            <span class="stat-item">
+                <i class="fas fa-list"></i>
+                <span id="line-count">0</span> lines
+            </span>
+        </div>
     </div>
     <div class="editor-container">
         <textarea id="editor"></textarea>
@@ -721,10 +720,9 @@
             mode: 'htmlmixed',
             lineNumbers: true,
             lineWrapping: true,
-            scrollbarStyle: 'simple',
+            scrollbarStyle: 'overlay',
             styleActiveLine: true,
             styleActiveSelected: true,
-            scrollbarStyle: 'overlay',
             viewportMargin: Infinity,
             matchBrackets: true,
             highlightSelectionMatches: {showToken: /\w/, annotateScrollbar: true},
@@ -733,13 +731,7 @@
             cursorHeight: 1,
             fontWeight: '500',
             theme: 'custom',
-            lineNumbers: true,
             autoCloseTags: true,
-            autoCloseBrackets: true,
-            matchBrackets: true,
-            indentUnit: 2,
-            tabSize: 2,
-            lineWrapping: true,
             foldGutter: true,
 
             // Auto-completion and pairing features
@@ -747,12 +739,9 @@
                 pairs: '()[]{}""\'\'``',
                 explode: '{}[]()<>'
             },
-            autoCloseTags: true,
-            matchBrackets: true,
             matchTags: {bothTags: true},
-            
+
             // Code folding
-            foldGutter: true,
             foldOptions: {
                 widget: '...'
             },
@@ -773,18 +762,7 @@
                     openInNewTab();
                 }
             },
-            gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter'],
-            extraKeys: {
-                'Ctrl-Space': 'autocomplete',
-                'Ctrl-F': 'search',
-                'Tab': function(cm) {
-                    if (cm.somethingSelected()) {
-                        cm.indentSelection('add');
-                    } else {
-                        cm.replaceSelection('  ', 'end');
-                    }
-                }
-            }
+            gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter']
         });
 
         function showStatus(message, isError = false) {
