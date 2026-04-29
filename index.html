@@ -5,357 +5,565 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CODING TOOLS</title>
     <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         :root {
-            --neon-green: #00ff00;
-            --bg-color: #0a0a0a;
-            --transition-speed: 0.3s;
-            --tool-padding: 2rem;
-            --tool-font-size: 1.5rem;
+            --g: #00ff41;
+            --g-dim: #00b32c;
+            --g-dark: #003b0f;
+            --g-glow: rgba(0,255,65,0.15);
+            --bg: #050a05;
+            --scan: rgba(0,0,0,0.08);
+            --speed: 0.25s;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-        body, html {
-            font-family: 'JetBrains Mono', monospace;
-            background-color: var(--bg-color);
-            color: var(--neon-green);
+        html, body {
+            font-family: 'Share Tech Mono', monospace;
+            background: var(--bg);
+            color: var(--g);
             overflow-x: hidden;
-            height: 100%;
-            width: 100%;
+            min-height: 100%;
+            cursor: crosshair;
         }
 
+        /* ── CRT Overlay ── */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: repeating-linear-gradient(
+                to bottom,
+                transparent 0px,
+                transparent 3px,
+                var(--scan) 3px,
+                var(--scan) 4px
+            );
+            pointer-events: none;
+            z-index: 9999;
+            animation: scanShift 8s linear infinite;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.75) 100%);
+            pointer-events: none;
+            z-index: 9998;
+        }
+
+        @keyframes scanShift {
+            0%   { background-position: 0 0; }
+            100% { background-position: 0 100px; }
+        }
+
+        /* ── Canvas ── */
         #canvas {
             position: fixed;
-            top: 0;
-            left: 0;
+            inset: 0;
             z-index: 0;
-            opacity: 0.8;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+            opacity: 0.6;
         }
 
-        .content {
+        /* ── Layout ── */
+        .page {
             position: relative;
+            z-index: 1;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
-            z-index: 1;
-            padding: 2rem;
+            padding: 3rem 2rem 4rem;
         }
 
-        .glitch-container {
-            position: relative;
-            margin-bottom: 4rem;
+        /* ── Header Bar ── */
+        .sys-bar {
+            width: 100%;
+            max-width: 1100px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3.5rem;
+            border-bottom: 1px solid rgba(0,255,65,0.2);
+            padding-bottom: 0.75rem;
+            font-size: 0.7rem;
+            letter-spacing: 0.15em;
+            color: var(--g-dim);
+        }
+
+        .sys-bar .blink {
+            animation: blink 1.2s step-end infinite;
+            color: var(--g);
+        }
+
+        @keyframes blink { 50% { opacity: 0; } }
+
+        /* ── Title ── */
+        .title-wrap {
             text-align: center;
+            margin-bottom: 4rem;
+            position: relative;
+        }
+
+        .label {
+            font-size: 0.65rem;
+            letter-spacing: 0.5em;
+            color: var(--g-dim);
+            margin-bottom: 1rem;
+            display: block;
         }
 
         h1 {
-            font-size: 4.5rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5rem;
-            color: var(--neon-green);
-            text-shadow: 0 0 20px var(--neon-green);
+            font-family: 'Orbitron', monospace;
+            font-weight: 900;
+            font-size: clamp(2.8rem, 8vw, 6.5rem);
+            letter-spacing: 0.1em;
+            line-height: 1;
+            color: var(--g);
+            text-shadow:
+                0 0 10px var(--g),
+                0 0 30px rgba(0,255,65,0.5),
+                0 0 70px rgba(0,255,65,0.2);
             position: relative;
-        }
-
-        h1::before, h1::after {
-            content: 'CODING TOOLS';
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            left: 0;
-            top: 0;
-            color: var(--neon-green);
-            text-shadow: 0 0 15px var(--neon-green);
-            opacity: 0.7;
+            display: inline-block;
         }
 
         h1::before {
-            animation: glitch 3s infinite;
-            z-index: -1;
+            content: attr(data-text);
+            position: absolute;
+            inset: 0;
+            color: var(--g);
+            text-shadow: none;
+            clip-path: polygon(0 0, 100% 0, 100% 35%, 0 35%);
+            animation: glitchTop 4s infinite;
+            opacity: 0.8;
         }
 
         h1::after {
-            animation: glitch 2s infinite;
-            opacity: 0.5;
-            z-index: -2;
+            content: attr(data-text);
+            position: absolute;
+            inset: 0;
+            color: var(--g);
+            text-shadow: none;
+            clip-path: polygon(0 65%, 100% 65%, 100% 100%, 0 100%);
+            animation: glitchBot 4s infinite;
+            opacity: 0.8;
         }
 
+        @keyframes glitchTop {
+            0%, 90%, 100% { transform: translate(0); opacity: 0; }
+            91% { transform: translate(-4px, -2px); opacity: 0.9; filter: hue-rotate(90deg); }
+            93% { transform: translate(4px, 1px); opacity: 0.7; }
+            95% { transform: translate(-2px, 0); opacity: 0.9; }
+            97% { transform: translate(0); opacity: 0; }
+        }
+
+        @keyframes glitchBot {
+            0%, 85%, 100% { transform: translate(0); opacity: 0; }
+            86% { transform: translate(5px, 2px); opacity: 0.8; filter: hue-rotate(-90deg); }
+            89% { transform: translate(-3px, -1px); opacity: 0.6; }
+            92% { transform: translate(0); opacity: 0; }
+        }
+
+        .subtitle {
+            font-size: 0.75rem;
+            letter-spacing: 0.35em;
+            color: var(--g-dim);
+            margin-top: 1.2rem;
+            display: block;
+        }
+
+        .subtitle span {
+            color: var(--g);
+        }
+
+        /* ── Grid ── */
         .tools-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 2rem;
-            max-width: 1200px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            max-width: 700px;
             width: 100%;
-            margin: 0 auto;
-            padding: 0 1rem;
         }
 
+        /* ── Tool Cards ── */
         .tool {
-            background: rgba(0, 255, 0, 0.05);
-            border: 2px solid var(--neon-green);
-            padding: var(--tool-padding);
-            border-radius: 8px;
-            text-align: center;
-            text-decoration: none;
-            color: var(--neon-green);
-            font-size: var(--tool-font-size);
-            font-weight: 700;
             position: relative;
-            overflow: hidden;
-            transition: all var(--transition-speed) ease;
-            text-shadow: 0 0 10px var(--neon-green);
-            min-height: 100px;
             display: flex;
-            align-items: center;
-            justify-content: center;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: flex-end;
+            padding: 1.6rem 1.8rem;
+            text-decoration: none;
+            color: var(--g);
+            background: rgba(0,255,65,0.03);
+            border: 1px solid rgba(0,255,65,0.3);
+            border-radius: 3px;
+            min-height: 130px;
+            overflow: hidden;
+            transition: border-color var(--speed), background var(--speed), transform var(--speed);
+            cursor: crosshair;
+        }
+
+        /* Corner brackets */
+        .tool::before, .tool::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-color: var(--g);
+            border-style: solid;
+            transition: all 0.4s ease;
         }
 
         .tool::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(
-                90deg,
-                transparent 0%,
-                rgba(255, 255, 255, 0.2) 50%,
-                transparent 100%
-            );
-            transition: 0.5s;
+            top: 6px; left: 6px;
+            border-width: 2px 0 0 2px;
         }
 
-        .tool:hover::before {
-            left: 100%;
+        .tool::after {
+            bottom: 6px; right: 6px;
+            border-width: 0 2px 2px 0;
+        }
+
+        .tool:hover::before, .tool:hover::after {
+            width: 18px; height: 18px;
+        }
+
+        /* Sweep line on hover */
+        .tool .sweep {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(105deg, transparent 0%, rgba(0,255,65,0.08) 50%, transparent 100%);
+            transform: translateX(-100%);
+            transition: none;
+            pointer-events: none;
+        }
+
+        .tool:hover .sweep {
+            transform: translateX(200%);
+            transition: transform 0.5s ease;
+        }
+
+        /* Index number */
+        .tool .idx {
+            position: absolute;
+            top: 1rem;
+            right: 1.2rem;
+            font-size: 0.6rem;
+            letter-spacing: 0.1em;
+            color: rgba(0,255,65,0.3);
+            font-family: 'Share Tech Mono', monospace;
+            transition: color var(--speed);
+        }
+
+        .tool:hover .idx {
+            color: var(--g);
+        }
+
+        /* Status dot */
+        .tool .dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--g-dim);
+            margin-bottom: 0.9rem;
+            transition: background var(--speed), box-shadow var(--speed);
+        }
+
+        .tool:hover .dot {
+            background: var(--g);
+            box-shadow: 0 0 8px var(--g), 0 0 16px rgba(0,255,65,0.6);
+            animation: pulse 0.8s ease infinite alternate;
+        }
+
+        @keyframes pulse {
+            from { box-shadow: 0 0 6px var(--g); }
+            to   { box-shadow: 0 0 14px var(--g), 0 0 28px rgba(0,255,65,0.4); }
+        }
+
+        .tool-name {
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            font-size: clamp(0.75rem, 1.4vw, 1rem);
+            letter-spacing: 0.08em;
+            line-height: 1.3;
+            text-shadow: 0 0 8px rgba(0,255,65,0.4);
+            transition: text-shadow var(--speed);
+            position: relative;
+            z-index: 1;
         }
 
         .tool:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 0 30px rgba(0, 255, 0, 0.4);
-            animation: rainbowBorder 2s linear infinite;
-            border-width: 3px;
+            background: rgba(0,255,65,0.07);
+            border-color: var(--g);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 40px rgba(0,255,65,0.12), inset 0 0 30px rgba(0,255,65,0.04);
+        }
+
+        .tool:hover .tool-name {
+            text-shadow: 0 0 16px var(--g), 0 0 30px rgba(0,255,65,0.4);
+        }
+
+        /* ── Footer ── */
+        .footer {
+            margin-top: 4rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .divider {
+            width: 300px;
+            height: 1px;
+            background: linear-gradient(to right, transparent, var(--g-dim), transparent);
         }
 
         .back-link {
-            margin-top: 4rem;
-            color: var(--neon-green);
+            color: var(--g-dim);
             text-decoration: none;
-            font-size: 1.2rem;
-            padding: 0.8rem 1.5rem;
-            border: 2px solid var(--neon-green);
-            border-radius: 4px;
-            transition: all var(--transition-speed) ease;
+            font-size: 0.7rem;
+            letter-spacing: 0.4em;
+            padding: 0.8rem 2.5rem;
+            border: 1px solid rgba(0,255,65,0.25);
+            border-radius: 2px;
+            transition: all var(--speed);
             text-transform: uppercase;
-            letter-spacing: 2px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .back-link::before {
+            content: '>';
+            margin-right: 0.6em;
+            opacity: 0;
+            transition: opacity var(--speed), margin var(--speed);
         }
 
         .back-link:hover {
-            animation: rainbowBorder 2s linear infinite;
-            transform: translateY(-3px);
-            text-shadow: 0 0 10px var(--neon-green);
-            border-width: 3px;
+            color: var(--g);
+            border-color: var(--g);
+            box-shadow: 0 0 20px rgba(0,255,65,0.15);
+            letter-spacing: 0.5em;
         }
 
-        @keyframes rainbowBorder {
-            0% { border-color: #ff0000; box-shadow: 0 0 20px #ff0000; }
-            17% { border-color: #ff8800; box-shadow: 0 0 20px #ff8800; }
-            33% { border-color: #ffff00; box-shadow: 0 0 20px #ffff00; }
-            50% { border-color: #00ff00; box-shadow: 0 0 20px #00ff00; }
-            67% { border-color: #0088ff; box-shadow: 0 0 20px #0088ff; }
-            83% { border-color: #8800ff; box-shadow: 0 0 20px #8800ff; }
-            100% { border-color: #ff0000; box-shadow: 0 0 20px #ff0000; }
+        .back-link:hover::before {
+            opacity: 1;
         }
 
-        @keyframes glitch {
-            0% { transform: translate(0); }
-            20% { transform: translate(-2px, 2px); }
-            40% { transform: translate(-2px, -2px); }
-            60% { transform: translate(2px, 2px); }
-            80% { transform: translate(2px, -2px); }
-            100% { transform: translate(0); }
+        .sys-status {
+            font-size: 0.6rem;
+            letter-spacing: 0.2em;
+            color: rgba(0,255,65,0.25);
         }
 
-        @media (max-width: 1024px) {
-            h1 {
-                font-size: 4rem;
-                letter-spacing: 0.4rem;
-            }
+        /* ── Typewriter Intro ── */
+        #intro-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: opacity 0.6s ease;
         }
 
+        #intro-overlay.fade {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .boot-line {
+            font-size: 0.75rem;
+            letter-spacing: 0.15em;
+            color: var(--g-dim);
+            opacity: 0;
+            animation: fadeIn 0.15s ease forwards;
+        }
+
+        .boot-line.bright {
+            color: var(--g);
+            text-shadow: 0 0 10px rgba(0,255,65,0.5);
+        }
+
+        @keyframes fadeIn { to { opacity: 1; } }
+
+        /* ── Responsive ── */
         @media (max-width: 768px) {
-            h1 {
-                font-size: 2.5rem;
-                letter-spacing: 0.3rem;
-            }
-
             .tools-grid {
-                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-                gap: 1.5rem;
-                padding: 0 1rem;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
             }
 
-            .tool {
-                padding: 1.5rem;
-                font-size: 1.2rem;
-                min-height: 80px;
-            }
-
-            .back-link {
-                font-size: 1rem;
-                padding: 0.6rem 1.2rem;
-            }
+            .sys-bar { font-size: 0.6rem; }
         }
 
         @media (max-width: 480px) {
-            h1 {
-                font-size: 2rem;
-                letter-spacing: 0.2rem;
-            }
-
             .tools-grid {
                 grid-template-columns: 1fr;
-                gap: 1rem;
-                padding: 0 0.5rem;
             }
 
-            .tool {
-                padding: 1rem;
-                font-size: 1rem;
-                min-height: 60px;
-            }
-
-            .back-link {
-                font-size: 0.9rem;
-                padding: 0.5rem 1rem;
-            }
+            .tool { min-height: 100px; }
         }
     </style>
 </head>
 <body>
+
+    <!-- Boot Screen -->
+    <div id="intro-overlay"></div>
+
     <canvas id="canvas"></canvas>
-    <div class="content">
-        <div class="glitch-container">
-            <h1>CODING TOOLS</h1>
+
+    <div class="page">
+        <div class="sys-bar">
+            <span>SYS://ISAIART.COM/CODE</span>
+            <span id="live-time">00:00:00</span>
+            <span>CONN <span class="blink">▮</span></span>
         </div>
+
+        <div class="title-wrap">
+            <span class="label">[ DEVELOPER UTILITIES v3.0 ]</span>
+            <h1 data-text="CODING TOOLS">CODING TOOLS</h1>
+            <span class="subtitle">SELECT MODULE — <span>2 ACTIVE</span></span>
+        </div>
+
         <div class="tools-grid">
-            <a href="https://code.isaiart.com/editor" target="_blank" class="tool" aria-label="Code Editor">CODE EDITOR</a>
-            <a href="https://code.isaiart.com/separator" target="_blank" class="tool" aria-label="Code Separator">CODE SEPARATOR</a>
-            <a href="https://code.isaiart.com/combiner" target="_blank" class="tool" aria-label="Code Combiner">CODE COMBINER</a>
-            <a href="https://code.isaiart.com/editor2" target="_blank" class="tool" aria-label="Code Editor V2">CODE EDITOR V2</a>
-            <!-- Added Mobile Coding Link -->
-            <a href="https://code.isaiart.com/mobile" target="_blank" class="tool" aria-label="Mobile Coding">MOBILE CODING</a>
-            <!-- Added FAVICON GENERATOR Link -->
-            <a href="https://code.isaiart.com/favicon" target="_blank" class="tool" aria-label="Favicon Generator">FAVICON GENERATOR</a>
+            <a href="https://code.isaiart.com/editor" target="_blank" class="tool">
+                <div class="sweep"></div>
+                <span class="idx">01</span>
+                <div class="dot"></div>
+                <span class="tool-name">CODE EDITOR</span>
+            </a>
+            <a href="https://code.isaiart.com/mobile" target="_blank" class="tool">
+                <div class="sweep"></div>
+                <span class="idx">02</span>
+                <div class="dot"></div>
+                <span class="tool-name">MOBILE CODING</span>
+            </a>
         </div>
-        <a href="https://isaiart.com" class="back-link" aria-label="Back to IsaiArt.com">BACK TO ISAIART.COM</a>
+
+        <div class="footer">
+            <div class="divider"></div>
+            <a href="https://isaiart.com" class="back-link">RETURN TO ISAIART.COM</a>
+            <span class="sys-status">ALL SYSTEMS NOMINAL — UPTIME 100%</span>
+        </div>
     </div>
 
     <script>
-        // Three.js setup
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas'), antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
+    // ── Boot Screen ──
+    const overlay = document.getElementById('intro-overlay');
+    const lines = [
+        { text: 'BIOS v2.3.1 — ISAIART SYSTEMS', bright: false, delay: 0 },
+        { text: 'CHECKING MEMORY... OK', bright: false, delay: 200 },
+        { text: 'LOADING MODULES... [██████████] 100%', bright: false, delay: 450 },
+        { text: 'NETWORK INTERFACE... ONLINE', bright: false, delay: 680 },
+        { text: '> CODING TOOLS INITIALIZED', bright: true, delay: 950 },
+    ];
 
-        // Create multiple particle systems
-        const particleGroups = [
-            { color: 0x00ff00, size: 0.004, count: 15000 },
-            { color: 0x00ff00, size: 0.003, count: 7500 },
-            { color: 0x00ff00, size: 0.002, count: 5000 }
-        ];
+    lines.forEach(({ text, bright, delay }) => {
+        setTimeout(() => {
+            const el = document.createElement('div');
+            el.className = 'boot-line' + (bright ? ' bright' : '');
+            el.style.animationDelay = '0s';
+            el.textContent = text;
+            overlay.appendChild(el);
+        }, delay);
+    });
 
-        const particleMeshes = particleGroups.map(group => {
-            const geometry = new THREE.BufferGeometry();
-            const positions = new Float32Array(group.count * 3);
-            
-            for (let i = 0; i < group.count * 3; i++) {
-                positions[i] = (Math.random() - 0.5) * 15;
-            }
-            
-            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-            
-            const material = new THREE.PointsMaterial({
-                size: group.size,
-                color: group.color,
-                transparent: true,
-                opacity: 0.8
-            });
-            
-            return new THREE.Points(geometry, material);
+    setTimeout(() => overlay.classList.add('fade'), 1600);
+    setTimeout(() => overlay.remove(), 2300);
+
+    // ── Live Clock ──
+    function updateClock() {
+        const now = new Date();
+        document.getElementById('live-time').textContent =
+            now.toTimeString().slice(0, 8);
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    // ── Three.js Background ──
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(70, innerWidth / innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('canvas'), antialias: true, alpha: true });
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+
+    const groups = [
+        { color: 0x00ff41, size: 0.012, count: 8000,  speed: 1.0 },
+        { color: 0x00ff41, size: 0.007, count: 4000,  speed: 1.6 },
+        { color: 0x00cc33, size: 0.004, count: 12000, speed: 0.7 },
+    ];
+
+    const meshes = groups.map(g => {
+        const geo = new THREE.BufferGeometry();
+        const pos = new Float32Array(g.count * 3);
+        for (let i = 0; i < g.count * 3; i++) pos[i] = (Math.random() - 0.5) * 18;
+        geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+        const mat = new THREE.PointsMaterial({
+            size: g.size, color: g.color,
+            transparent: true, opacity: 0.7,
+            sizeAttenuation: true
+        });
+        const m = new THREE.Points(geo, mat);
+        scene.add(m);
+        return { mesh: m, speed: g.speed };
+    });
+
+    camera.position.z = 5;
+
+    let mx = 0, my = 0, tx = 0, ty = 0;
+
+    document.addEventListener('mousemove', e => {
+        mx = (e.clientX / innerWidth) * 2 - 1;
+        my = -(e.clientY / innerHeight) * 2 + 1;
+    });
+
+    document.addEventListener('touchmove', e => {
+        if (!e.touches.length) return;
+        mx = (e.touches[0].clientX / innerWidth) * 2 - 1;
+        my = -(e.touches[0].clientY / innerHeight) * 2 + 1;
+    }, { passive: true });
+
+    (function animate() {
+        requestAnimationFrame(animate);
+        const t = Date.now() * 0.001;
+        tx += (my * 0.15 - tx) * 0.04;
+        ty += (mx * 0.15 - ty) * 0.04;
+
+        meshes.forEach(({ mesh, speed }, i) => {
+            mesh.rotation.x = tx + t * 0.0004 * speed;
+            mesh.rotation.y = ty + t * 0.0006 * speed;
+            mesh.position.y = Math.sin(t * 0.3 * speed) * 0.15;
+            mesh.position.x = Math.cos(t * 0.2 * speed) * 0.15;
         });
 
-        particleMeshes.forEach(mesh => scene.add(mesh));
+        renderer.render(scene, camera);
+    })();
 
-        camera.position.z = 4;
+    window.addEventListener('resize', () => {
+        camera.aspect = innerWidth / innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(innerWidth, innerHeight);
+    });
 
-        // Animation
-        let mouseX = 0;
-        let mouseY = 0;
-        let targetRotationX = 0;
-        let targetRotationY = 0;
-
-        function animate() {
-            requestAnimationFrame(animate);
-            
-            // Animate each particle system differently
-            particleMeshes.forEach((mesh, index) => {
-                mesh.rotation.x += 0.0003 * (index + 1);
-                mesh.rotation.y += 0.0005 * (index + 1);
-                
-                // Add wave-like motion
-                mesh.position.y = Math.sin(Date.now() * 0.001 * (index + 1)) * 0.1;
-                mesh.position.x = Math.cos(Date.now() * 0.001 * (index + 1)) * 0.1;
-                
-                // Mouse interaction
-                mesh.rotation.x += (targetRotationX - mesh.rotation.x) * 0.05;
-                mesh.rotation.y += (targetRotationY - mesh.rotation.y) * 0.05;
-            });
-            
-            renderer.render(scene, camera);
-        }
-
-        animate();
-
-        // Resize handler
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-
-        // Enhanced mouse interaction
-        document.addEventListener('mousemove', (event) => {
-            mouseX = (event.clientX / window.innerWidth) * 2 - 1;
-            mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
-            
-            targetRotationX = mouseY * 0.2;
-            targetRotationY = mouseX * 0.2;
-        });
-
-        // Touch interaction for mobile devices
-        document.addEventListener('touchmove', (event) => {
-            if (event.touches.length > 0) {
-                const touch = event.touches[0];
-                mouseX = (touch.clientX / window.innerWidth) * 2 - 1;
-                mouseY = -(touch.clientY / window.innerHeight) * 2 + 1;
-                
-                targetRotationX = mouseY * 0.2;
-                targetRotationY = mouseX * 0.2;
-            }
-        }, { passive: true });
+    // ── Card stagger entrance ──
+    document.querySelectorAll('.tool').forEach((el, i) => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(20px)';
+        setTimeout(() => {
+            el.style.transition = 'opacity 0.4s ease, transform 0.4s ease, border-color 0.25s, background 0.25s, box-shadow 0.25s';
+            el.style.opacity = '1';
+            el.style.transform = 'translateY(0)';
+        }, 1700 + i * 80);
+    });
     </script>
 </body>
 </html>
