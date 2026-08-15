@@ -19,7 +19,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="../assets/vector.css">
+<link rel="stylesheet" href="../assets/cassette.css">
 <script src="../assets/cassette.js"></script>
 
 <style>
@@ -61,8 +61,8 @@ html, body {
         padding: 14px;
         gap: 8px;
     }
-    .bar, .bank { border-radius: 0; border-left: 1px solid var(--chassis-edge); border-right: 1px solid var(--chassis-edge); }
-    .editor-area { border-radius: 0; }
+    .bar, .bank { border-radius: var(--r-chassis); border-left: 1px solid var(--chassis-edge); border-right: 1px solid var(--chassis-edge); }
+    .editor-area { border-radius: var(--r-chassis); }
 }
 
 /* ── Header ───────────────────────────────────────────────────────────── */
@@ -78,9 +78,6 @@ html, body {
     z-index: 4;
 }
 .bar > * { position: relative; z-index: 1; }
-
-.head-stripe { height: 14px; }
-.head-stripe i { width: 4px; min-height: 14px; }
 
 .desig { font-size: 12px; white-space: nowrap; min-width: 0; }
 .bar .tape { flex-shrink: 0; }
@@ -131,6 +128,7 @@ html, body {
     border-left: 0;
     border-right: 0;
     border-bottom: 1px solid var(--chassis-edge);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), inset 0 -2px 4px rgba(0, 0, 0, 0.16);
 }
 .strip-inner::-webkit-scrollbar { display: none; }
 .strip.open .strip-inner { transform: translateY(0); }
@@ -231,7 +229,7 @@ html, body {
 #code::selection { background: var(--phos-dim); color: var(--screen); }
 #code::-webkit-scrollbar { width: 6px; height: 6px; }
 #code::-webkit-scrollbar-track { background: transparent; }
-#code::-webkit-scrollbar-thumb { background: var(--phos-faint); border-radius: 0; }
+#code::-webkit-scrollbar-thumb { background: var(--phos-faint); border-radius: 3px; }
 
 /* ── Key bank ─────────────────────────────────────────────────────────── */
 
@@ -254,7 +252,7 @@ html, body {
     gap: 7px;
     min-height: 22px;
 }
-.bezel.mini { padding: 3px; border-radius: 0; min-width: 0; }
+.bezel.mini { padding: 3px; border-radius: 3px; min-width: 0; }
 .mini-scr {
     padding: 2px 8px;
     font-size: 10px;
@@ -358,12 +356,12 @@ html, body {
 
     <!-- ── HEADER ──────────────────────────────────────────────────────── -->
     <header class="chassis bar">
-        <a class="key back" href="../" aria-label="Back to all tools">
+        <a class="key back" href="../index.html" aria-label="Back to all tools">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/><path d="M20 12H8"/></svg>
             <span class="back-txt">Tools</span>
         </a>
-        <span class="stripe head-stripe" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
-        <h1 class="designation desig">Mobile Editor</h1>
+        <span class="tape">MOBILE</span>
+        <h1 class="designation desig">Editor</h1>
         <span class="spacer"></span>
 
         <button class="key key-sq" id="btn-strip" aria-label="Quick insert strip" aria-pressed="false" title="Quick insert">
@@ -416,6 +414,7 @@ html, body {
             <div class="bezel mini">
                 <div class="screen mini-scr"><span class="phos" id="readout">READY</span></div>
             </div>
+            <span class="vents" aria-hidden="true"><i></i><i></i><i></i></span>
             <!-- WR, not SAVE: this lamp is the autosave write, and the keycap
                  three rows down that downloads a file is the SAVE. -->
             <span class="label">WR</span>
@@ -482,6 +481,8 @@ html, body {
 <!-- ── SERVICE PANEL ───────────────────────────────────────────────────── -->
 <div class="panel-modal" id="svc-panel">
     <div class="sheet chassis" role="dialog" aria-modal="true" aria-label="Settings">
+        <span class="screw tl" aria-hidden="true"></span><span class="screw tr" aria-hidden="true"></span>
+        <span class="screw bl" aria-hidden="true"></span><span class="screw br" aria-hidden="true"></span>
         <div class="sheet-title">
             <span class="tape tape-alt">SET</span>
             <span class="designation" style="font-size:13px">Settings</span>
@@ -516,6 +517,8 @@ html, body {
 <!-- ── KEY MAP PANEL ───────────────────────────────────────────────────── -->
 <div class="panel-modal" id="map-panel">
     <div class="sheet chassis" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts">
+        <span class="screw tl" aria-hidden="true"></span><span class="screw tr" aria-hidden="true"></span>
+        <span class="screw bl" aria-hidden="true"></span><span class="screw br" aria-hidden="true"></span>
         <div class="sheet-title">
             <span class="tape tape-cool">KEYS</span>
             <span class="designation" style="font-size:13px">Shortcuts</span>
@@ -541,6 +544,8 @@ html, body {
 <!-- ── SAVE PANEL ──────────────────────────────────────────────────────── -->
 <div class="panel-modal" id="save-panel">
     <div class="sheet chassis" role="dialog" aria-modal="true" aria-label="Save file">
+        <span class="screw tl" aria-hidden="true"></span><span class="screw tr" aria-hidden="true"></span>
+        <span class="screw bl" aria-hidden="true"></span><span class="screw br" aria-hidden="true"></span>
         <div class="sheet-title">
             <span class="tape">SAVE</span>
             <span class="designation" style="font-size:13px">Save File</span>
@@ -1118,7 +1123,6 @@ html, body {
 
     CAS.bootOnce(well);
     CAS.registerSW('../sw.js');
-    CAS.pageTransition();
 })();
 </script>
 </body>

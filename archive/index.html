@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#2a2a2c">
+<title>Archive — Retired Tools</title>
+<meta name="description" content="Retired code.isaiart.com tools. Kept exactly as they were, no longer maintained.">
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/cassette.css">
+<script src="../assets/cassette.js"></script>
+<style>
+    /* This page is powered down: the chassis is de-rated, dustier, and the
+       lamps are dark. Same design language, switched off. */
+    body {
+        --chassis:      #b3aea1;
+        --chassis-hi:   #c6c1b4;
+        --chassis-lo:   #979287;
+        --chassis-edge: #7b7568;
+        --chassis-deep: #635e53;
+        --ink:          #3a362f;
+        --ink-soft:     #555047;
+        --ink-faint:    #6b655a;
+        padding: 22px 16px 48px;
+    }
+
+    .wrap { max-width: 860px; margin: 0 auto; }
+
+    .head {
+        padding: 16px 18px;
+        margin-bottom: 18px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex-wrap: wrap;
+    }
+    .head .vents { height: 22px; align-self: center; }
+
+    .tool {
+        padding: 15px 18px;
+        margin-bottom: 10px;
+        display: grid;
+        grid-template-columns: 78px 1fr auto;
+        gap: 14px;
+        align-items: center;
+    }
+    .tool .slot { display: flex; flex-direction: column; align-items: flex-start; gap: 7px; }
+    .tool h2 {
+        font-family: var(--f-display);
+        font-size: 0.95rem;
+        font-weight: 600;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        color: var(--ink);
+        text-shadow: 0 1px 0 rgba(255,255,255,0.4);
+        margin-bottom: 4px;
+    }
+    .tool p { margin-top: 5px; }
+    /* The de-rated chassis is lighter, so --ink-soft loses too much contrast
+       against it. Prose here uses full ink; the de-rate reads in the plastic. */
+    .prose { color: var(--ink); }
+    .tool .keys { display: flex; flex-direction: column; gap: 7px; align-items: stretch; }
+
+    .tape.dead { background: #9a8a80; box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 1px 2px rgba(0,0,0,0.3); }
+
+    .foot { margin-top: 20px; padding: 14px 18px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+    @media (max-width: 560px) {
+        .tool { grid-template-columns: 1fr; gap: 10px; }
+        .tool .keys { flex-direction: row; flex-wrap: wrap; }
+    }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+    <header class="head chassis">
+        <span class="screw tl"></span><span class="screw tr"></span>
+        <span class="screw bl"></span><span class="screw br"></span>
+        <div>
+            <div class="designation" style="font-size:1.05rem">ARCHIVE</div>
+            <div class="row-tight" style="margin-top:7px">
+                <span class="tape dead">RETIRED</span>
+                <span class="label">SIX TOOLS / READ ONLY / NOT MAINTAINED</span>
+            </div>
+        </div>
+        <span class="spacer"></span>
+        <span class="led" aria-hidden="true"></span>
+        <span class="label">PWR</span>
+        <div class="vents" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+        <a class="key" href="../index.html">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/><path d="M20 12H8"/></svg>
+            TOOLS
+        </a>
+    </header>
+
+    <p class="prose" style="margin: 0 4px 16px; max-width: 68ch">
+        These tools were retired during the redesign. They are kept exactly as they
+        were — original styling, original bugs — and get no further work. The parts
+        worth keeping were folded into the code editor and the mobile editor.
+    </p>
+
+    <section class="tool chassis">
+        <span class="tape dead">V2</span>
+        <div class="slot">
+            <h2>Code Editor V2</h2>
+            <p class="prose">Its tab system lives on in the code editor. Retired with a dead rename control, a preview that never ran scripts, and a gutter that drifted out of alignment with the code.</p>
+        </div>
+        <div class="keys"><a class="key" href="editor2/index.html">OPEN</a></div>
+    </section>
+
+    <section class="tool chassis">
+        <span class="tape dead">V1</span>
+        <div class="slot">
+            <h2>Original Code Editor</h2>
+            <p class="prose">The first split-pane editor, superseded by the current one. Its format button was never implemented.</p>
+        </div>
+        <div class="keys"><a class="key" href="oldeditor/index.html">OPEN</a></div>
+    </section>
+
+    <section class="tool chassis">
+        <span class="tape dead">COMBINE</span>
+        <div class="slot">
+            <h2>Code Combiner</h2>
+            <p class="prose">Merged three panes into one file. Retired because undo deleted a single character and redo did nothing while reporting success.</p>
+        </div>
+        <div class="keys"><a class="key" href="combiner/index.html">OPEN</a></div>
+    </section>
+
+    <section class="tool chassis">
+        <span class="tape dead">SPLIT</span>
+        <div class="slot">
+            <h2>Code Separator</h2>
+            <p class="prose">Split one file into HTML, CSS and JS. It worked, but only on a desktop — its output boxes collapsed to 108x4 px on a phone.</p>
+        </div>
+        <div class="keys"><a class="key" href="separator/index.html">OPEN</a></div>
+    </section>
+
+    <section class="tool chassis">
+        <span class="tape dead">ICON</span>
+        <div class="slot">
+            <h2>Favicon Emoji Generator</h2>
+            <p class="prose">Emitted a single line of HTML. Working to the end, but too narrow to keep. Multi-codepoint emoji were never supported.</p>
+        </div>
+        <div class="keys"><a class="key" href="favicon/index.html">OPEN</a></div>
+    </section>
+
+    <section class="tool chassis">
+        <span class="tape dead">REACT</span>
+        <div class="slot">
+            <h2>Mobile Editor — React Prototype</h2>
+            <p class="prose">Never deployed. A loose .jsx file needing a build step this site does not have. Kept for reference only.</p>
+        </div>
+        <div class="keys"><a class="key" href="mobiletest/index.jsx">VIEW SRC</a></div>
+    </section>
+
+    <footer class="foot chassis">
+        <span class="spacer"></span>
+        <label class="row-tight" style="gap:8px">
+            <span class="label">AMBER / GREEN</span>
+            <span class="rocker"><input type="checkbox" id="phos" aria-label="Display colour: amber or green"><span class="rock"></span></span>
+        </label>
+    </footer>
+</div>
+
+<script>
+    var phos = document.getElementById('phos');
+    phos.checked = CAS.getPhosphor() === 'green';
+    phos.addEventListener('change', function () { CAS.setPhosphor(phos.checked ? 'green' : 'amber'); });
+</script>
+</body>
+</html>

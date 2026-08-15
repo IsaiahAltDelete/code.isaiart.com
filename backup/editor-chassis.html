@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
-<link rel="stylesheet" href="../assets/vector.css">
+<link rel="stylesheet" href="../assets/cassette.css">
 <script src="../assets/cassette.js"></script>
 
 <!-- CodeMirror 5.65.2 -->
@@ -80,8 +80,8 @@ body {
 .chassis { flex: 0 0 auto; }
 
 /* Bezel tuned down — the stock 10px frame is too fat for a toolbar */
-.bezel.slim { padding: 0; }
-.bezel.pane  { padding: 0; }
+.bezel.slim { padding: 5px; }
+.bezel.pane  { padding: 6px; }
 
 /* ── HEADER ─────────────────────────────────────────────────────────── */
 
@@ -96,19 +96,12 @@ body {
     padding: 6px 10px;
 }
 
+/* The stamped name. It should out-weigh the 10px silkscreen around it. */
 .app-head .designation {
-    font-size: clamp(0.8rem, 1.5vw, 0.95rem);
-    font-weight: 600;
+    font-size: clamp(0.85rem, 1.6vw, 1.05rem);
+    font-weight: 700;
     white-space: nowrap;
 }
-
-/* The identity mark: six flat bands, printed not moulded. */
-.head-stripe { height: 16px; }
-.head-stripe i { width: 5px; min-height: 16px; }
-
-/* Wireframe globe — a drawn instrument, the one piece of ornament that
-   belongs in a technical-illustration language. */
-.globe { display: block; width: 22px; height: 22px; flex: 0 0 auto; }
 
 /* Degraded mode: CodeMirror never loaded, so the raw textarea IS the editor. */
 #editor.plain {
@@ -161,7 +154,7 @@ body {
 .file-scroll::-webkit-scrollbar-track { background: transparent; }
 .file-scroll::-webkit-scrollbar-thumb {
     background: var(--chassis-edge);
-    border-radius: 0;
+    border-radius: 3px;
 }
 
 .file-slot { position: relative; flex: 0 0 auto; }
@@ -190,7 +183,7 @@ body {
     height: 19px;
     padding: 0;
     border: 0;
-    border-radius: 0;
+    border-radius: 2px;
     background: transparent;
     color: var(--ink-faint);
     cursor: pointer;
@@ -208,6 +201,7 @@ body {
     align-self: stretch;
     min-height: 22px;
     background: var(--chassis-edge);
+    box-shadow: 1px 0 0 rgba(255, 255, 255, 0.45);
     flex: 0 0 auto;
 }
 
@@ -215,7 +209,7 @@ body {
 .danger-wrap {
     position: relative;
     padding: 2px;
-    border-radius: 0;
+    border-radius: calc(var(--r-key) + 2px);
     flex: 0 0 auto;
     display: inline-flex;
 }
@@ -282,15 +276,16 @@ body.preview-on .preview-pane {
     content: '';
     position: absolute;
     inset: 6px;
-    border-radius: 0;
+    border-radius: var(--r-screen);
     pointer-events: none;
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.55), inset 0 0 0 1px rgba(0, 0, 0, 0.5);
 }
 .preview-frame {
     flex: 1 1 auto;
     width: 100%;
     min-height: 0;
     border: 0;
-    border-radius: 0;
+    border-radius: var(--r-screen);
     background: var(--paper);      /* the machine's output stock, not browser white */
 }
 
@@ -405,6 +400,7 @@ body.preview-on .preview-pane {
 
 .cm-s-cassette .CodeMirror-cursor {
     border-left: 2px solid var(--phos);
+    box-shadow: 0 0 6px var(--phos-glow);
 }
 .cm-s-cassette div.CodeMirror-secondarycursor { border-left: 1px solid var(--phos-dim); }
 
@@ -420,7 +416,7 @@ body.preview-on .preview-pane {
 .cm-s-cassette .CodeMirror-matchingbracket {
     color: var(--phos) !important;
     border-bottom: 1px solid var(--phos);
-    text-shadow: none;
+    text-shadow: 0 0 8px var(--phos-glow);
 }
 .cm-s-cassette .CodeMirror-nonmatchingbracket { color: var(--alert) !important; }
 .cm-s-cassette .CodeMirror-matchingtag { background: var(--cm-lift); }
@@ -460,7 +456,7 @@ body.preview-on .preview-pane {
     text-shadow: none;
     font-family: var(--f-mono);
     background: var(--cm-wash);
-    border-radius: 0;
+    border-radius: 2px;
     padding: 0 4px;
 }
 
@@ -474,7 +470,7 @@ body.preview-on .preview-pane {
 .cm-s-cassette .CodeMirror-vscrollbar::-webkit-scrollbar-thumb,
 .cm-s-cassette .CodeMirror-hscrollbar::-webkit-scrollbar-thumb {
     background: var(--phos-faint);
-    border-radius: 0;
+    border-radius: 3px;
 }
 .cm-s-cassette .CodeMirror-scrollbar-filler,
 .cm-s-cassette .CodeMirror-gutter-filler { background: var(--screen-deep); }
@@ -490,6 +486,7 @@ body.preview-on .preview-pane {
     /* No drop shadow: this strip sits on the phosphor plane, and a tube emits
        light rather than reflecting it. A bright scan edge does the separating. */
     border-bottom: 1px solid var(--phos-faint);
+    box-shadow: 0 1px 0 var(--cm-hair);
 }
 .cm-s-cassette .CodeMirror-dialog input {
     font-family: var(--f-mono);
@@ -497,13 +494,14 @@ body.preview-on .preview-pane {
     color: var(--phos);
     background: var(--screen);
     border: 1px solid #000;
-    border-radius: 0;
+    border-radius: 2px;
     padding: 4px 7px;
     margin-left: 6px;
     outline: none;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.85);
     caret-color: var(--phos);
 }
-.cm-s-cassette .CodeMirror-dialog input:focus { border-color: var(--accent); }
+.cm-s-cassette .CodeMirror-dialog input:focus { box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.85), 0 0 0 2px var(--tape); }
 /* These are SOFT keys drawn on the tube, not moulded caps on the chassis —
    a beige keycap rendered inside the screen well breaks the two-plane rule. */
 .cm-s-cassette .CodeMirror-dialog button {
@@ -514,7 +512,7 @@ body.preview-on .preview-pane {
     color: var(--phos-dim);
     background: transparent;
     border: 1px solid var(--cm-hair);
-    border-radius: 0;
+    border-radius: 2px;
     padding: 3px 8px;
     margin-left: 6px;
     cursor: pointer;
@@ -540,10 +538,11 @@ body.preview-on .preview-pane {
     font-size: 0.72rem;
     background: var(--screen-deep);
     border: 1px solid var(--phos-faint);
-    border-radius: 0;
+    border-radius: 2px;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.9);
     padding: 3px;
 }
-.CodeMirror-hint { color: var(--phos-dim); padding: 3px 8px; border-radius: 0; }
+.CodeMirror-hint { color: var(--phos-dim); padding: 3px 8px; border-radius: 2px; }
 li.CodeMirror-hint-active { background: var(--phos-faint); color: var(--phos); }
 
 /* ── RESPONSIVE ─────────────────────────────────────────────────────── */
@@ -594,11 +593,12 @@ li.CodeMirror-hint-active { background: var(--phos-faint); color: var(--phos); }
 
 <!-- ══ HEADER ═══════════════════════════════════════════════════════════ -->
 <header class="chassis app-head">
+    <span class="screw tl" aria-hidden="true"></span>
+    <span class="screw tr" aria-hidden="true"></span>
 
-    <a class="key key-sq" href="../" aria-label="Back to all tools" title="Back to all tools">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true"><path d="M15 5l-7 7 7 7"/><path d="M20 12H8"/></svg>
+    <a class="key key-sq" href="../index.html" aria-label="Back to all tools" title="Back to all tools">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/><path d="M20 12H8"/></svg>
     </a>
-    <span class="stripe head-stripe" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
     <h1 class="designation">Code Editor</h1>
 
     <span class="tool-sep" aria-hidden="true"></span>
@@ -704,7 +704,8 @@ li.CodeMirror-hint-active { background: var(--phos-faint); color: var(--phos); }
 
 <!-- ══ STATUS RAIL ══════════════════════════════════════════════════════ -->
 <footer class="chassis stat-rail">
-    <canvas id="globe" class="globe" width="22" height="22" aria-hidden="true"></canvas>
+    <span class="screw bl" aria-hidden="true"></span>
+    <span class="screw br" aria-hidden="true"></span>
 
     <div class="gauges">
         <div class="gauge">
@@ -745,6 +746,8 @@ li.CodeMirror-hint-active { background: var(--phos-faint); color: var(--phos); }
 
 <div class="panel-modal" id="panelNew" role="dialog" aria-modal="true" aria-labelledby="panelNewTitle">
     <div class="sheet chassis">
+        <span class="screw tl" aria-hidden="true"></span><span class="screw tr" aria-hidden="true"></span>
+        <span class="screw bl" aria-hidden="true"></span><span class="screw br" aria-hidden="true"></span>
         <h2 class="designation sheet-title" id="panelNewTitle">New File</h2>
         <div class="rule"></div>
         <label class="label" for="newName">File name</label>
@@ -758,6 +761,8 @@ li.CodeMirror-hint-active { background: var(--phos-faint); color: var(--phos); }
 
 <div class="panel-modal" id="panelRename" role="dialog" aria-modal="true" aria-labelledby="panelRenameTitle">
     <div class="sheet chassis">
+        <span class="screw tl" aria-hidden="true"></span><span class="screw tr" aria-hidden="true"></span>
+        <span class="screw bl" aria-hidden="true"></span><span class="screw br" aria-hidden="true"></span>
         <h2 class="designation sheet-title" id="panelRenameTitle">Rename File</h2>
         <div class="rule"></div>
         <label class="label" for="renameName">New name</label>
@@ -771,6 +776,8 @@ li.CodeMirror-hint-active { background: var(--phos-faint); color: var(--phos); }
 
 <div class="panel-modal" id="panelSave" role="dialog" aria-modal="true" aria-labelledby="panelSaveTitle">
     <div class="sheet chassis">
+        <span class="screw tl" aria-hidden="true"></span><span class="screw tr" aria-hidden="true"></span>
+        <span class="screw bl" aria-hidden="true"></span><span class="screw br" aria-hidden="true"></span>
         <h2 class="designation sheet-title" id="panelSaveTitle">Save File</h2>
         <div class="rule"></div>
         <label class="label" for="saveName">File name</label>
@@ -793,6 +800,8 @@ li.CodeMirror-hint-active { background: var(--phos-faint); color: var(--phos); }
 
 <div class="panel-modal" id="panelClear" role="dialog" aria-modal="true" aria-labelledby="panelClearTitle">
     <div class="sheet chassis">
+        <span class="screw tl" aria-hidden="true"></span><span class="screw tr" aria-hidden="true"></span>
+        <span class="screw bl" aria-hidden="true"></span><span class="screw br" aria-hidden="true"></span>
         <h2 class="designation sheet-title" id="panelClearTitle">Clear File</h2>
         <div class="rule"></div>
         <p class="prose note">This clears the active file. Ctrl+Z still undoes it until you reload.</p>
@@ -805,6 +814,8 @@ li.CodeMirror-hint-active { background: var(--phos-faint); color: var(--phos); }
 
 <div class="panel-modal" id="panelKeys" role="dialog" aria-modal="true" aria-labelledby="panelKeysTitle">
     <div class="sheet chassis">
+        <span class="screw tl" aria-hidden="true"></span><span class="screw tr" aria-hidden="true"></span>
+        <span class="screw bl" aria-hidden="true"></span><span class="screw br" aria-hidden="true"></span>
         <h2 class="designation sheet-title" id="panelKeysTitle">Shortcuts</h2>
         <div class="rule"></div>
         <div class="bezel slim">
@@ -1507,7 +1518,6 @@ li.CodeMirror-hint-active { background: var(--phos-faint); color: var(--phos); }
         /* The wipe scales the screen's children for ~380ms, and CodeMirror is
            one of them — measuring inside that window gives it a squashed
            viewport. Refresh once the transform has settled. */
-        CAS.globe($('globe'));
         CAS.bootOnce(elScreen);
         setTimeout(function () { cm.refresh(); }, 60);
         setTimeout(function () { cm.refresh(); }, 440);

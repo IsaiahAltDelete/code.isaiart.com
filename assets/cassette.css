@@ -1,0 +1,753 @@
+/* ============================================================================
+   CASSETTE — the design language for code.isaiart.com
+   ---------------------------------------------------------------------------
+   One rule carries everything: TWO PLANES.
+     .chassis  — warm beige injection-molded plastic. Beveled, screwed,
+                 labeled, casts shadow. Holds controls.
+     .screen   — recessed near-black CRT well. Phosphor text only.
+                 Never sits flush; always inset.
+   Never blend them. Chassis never glows. Screens never cast shadows outward.
+   ========================================================================= */
+
+/* ── 1. TOKENS ───────────────────────────────────────────────────────────── */
+
+:root {
+    /* Chassis — warm beige plastic */
+    --chassis:      #c8c2b0;
+    --chassis-hi:   #ded9ca;
+    --chassis-lo:   #a9a396;
+    --chassis-edge: #877f70;
+    --chassis-deep: #6e685c;
+
+    /* Panel — charcoal bezel around screens */
+    --panel:        #2a2a2c;
+    --panel-hi:     #3d3d40;
+    --panel-lo:     #171718;
+
+    /* Screen — recessed CRT well */
+    --screen:       #0e100c;
+    --screen-deep:  #070806;
+    --screen-edge:  #1d2119;
+
+    /* Phosphor — the switchable one */
+    --phos:         #ffb000;
+    --phos-dim:     #b07b06;      /* 5.2:1 on --screen — dim, still readable */
+    --phos-faint:   #4a3204;      /* structural only: rules, unlit segments */
+    --phos-glow:    rgba(255, 176, 0, 0.28);
+
+    /* Fixed phosphors (readouts that never switch) */
+    --amber:        #ffb000;
+    --amber-dim:    #9c6c05;
+    --green:        #7cff9b;
+    --green-dim:    #2f6b3d;
+    --cyan:         #4fb3c4;
+
+    /* Signal.
+       --tape is a deep oxide orange rather than a bright one so the near-white
+       lettering printed on it clears 4.5:1; the bright version measured 3.2:1. */
+    --tape:         #bd4a20;
+    --tape-ink:     #2a1a12;
+    --alert:        #c4362b;
+    --alert-dim:    #4a1712;
+    --caution:      #e8b33a;
+    --paper:        #ece6d6;      /* output stock: printouts and preview frames */
+
+    /* Ink — engraved text on chassis. These are the only text colours used on
+       the beige plane, and the type carrying them is 10px and tracked, so they
+       are tuned for contrast first. On --chassis: --ink 12.1:1, --ink-soft
+       4.6:1, --ink-faint 4.0:1. A light plane cannot hold a wider ink ramp
+       than that without one end going illegible — don't lighten these. */
+    --ink:          #2c2822;
+    --ink-soft:     #544e43;
+    --ink-faint:    #5f584c;
+
+    /* Geometry */
+    --r-chassis:    5px;
+    --r-key:        4px;
+    --r-screen:     3px;
+    --bevel:        2px;
+
+    /* Motion — mechanical, short */
+    --snap:         90ms cubic-bezier(0.2, 0, 0.1, 1);
+    --travel:       120ms cubic-bezier(0.3, 0, 0.2, 1);
+    --slide:        180ms cubic-bezier(0.3, 0, 0.2, 1);
+
+    /* Type */
+    --f-display: 'Chakra Petch', 'Eurostile', 'Bahnschrift', 'DIN Alternate', sans-serif;
+    --f-mono:    'IBM Plex Mono', ui-monospace, 'Cascadia Mono', Consolas, 'Courier New', monospace;
+
+    /* Silkscreen label */
+    --label-size:  0.625rem;
+    --label-track: 0.16em;
+
+    color-scheme: dark;
+}
+
+/* Phosphor selector — P3 amber (default) / P1 green */
+:root[data-phosphor="green"] {
+    --phos:       #7cff9b;
+    --phos-dim:   #3f8f52;
+    --phos-faint: #1d3a25;
+    --phos-glow:  rgba(124, 255, 155, 0.22);
+}
+
+/* ── 2. RESET & GROUND ───────────────────────────────────────────────────── */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+    font-family: var(--f-mono);
+    color: var(--ink);
+    /* The room the machine sits in */
+    background-color: #16150f;
+    background-image:
+        radial-gradient(ellipse 120% 90% at 50% -10%, #2b291d 0%, #16150f 55%, #0c0b08 100%);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Molded-plastic grain. Applied to chassis surfaces, never to screens. */
+.grain::after,
+.chassis::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0.28;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+}
+
+/* ── 3. PLANE ONE: CHASSIS ───────────────────────────────────────────────── */
+
+.chassis {
+    position: relative;
+    background:
+        linear-gradient(180deg, var(--chassis-hi) 0%, var(--chassis) 6%, var(--chassis) 88%, var(--chassis-lo) 100%);
+    border-radius: var(--r-chassis);
+    border: 1px solid var(--chassis-edge);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.55),
+        inset 0 -2px 3px rgba(0, 0, 0, 0.18),
+        0 2px 0 var(--chassis-deep),
+        0 6px 18px rgba(0, 0, 0, 0.45);
+    color: var(--ink);
+}
+
+/* Engraved text — dark ink with a light lip below, like molded lettering */
+.engraved {
+    color: var(--ink);
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+/* Silkscreen label — the workhorse text style on any chassis surface */
+.label {
+    font-family: var(--f-mono);
+    font-size: var(--label-size);
+    font-weight: 600;
+    letter-spacing: var(--label-track);
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.label-lite { color: var(--ink-faint); }
+
+/* Running text on chassis. A silkscreen label is short and shouted; a
+   sentence is neither — never set prose in .label. */
+.prose {
+    font-family: var(--f-mono);
+    font-size: 0.72rem;
+    font-weight: 400;
+    line-height: 1.65;
+    letter-spacing: 0.01em;
+    text-transform: none;
+    color: var(--ink-soft);
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+/* Module designation — the big stamped name */
+.designation {
+    font-family: var(--f-display);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink);
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+/* Screw heads — place at panel corners */
+.screw {
+    position: absolute;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background:
+        linear-gradient(145deg, var(--chassis-lo), var(--chassis-edge));
+    box-shadow:
+        inset 0 1px 1px rgba(255, 255, 255, 0.4),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.35),
+        0 1px 1px rgba(255, 255, 255, 0.35);
+    pointer-events: none;
+}
+.screw::after {
+    content: '';
+    position: absolute;
+    inset: 2px 1px;
+    border-top: 1px solid rgba(0, 0, 0, 0.45);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+    transform: rotate(28deg);
+    transform-origin: center;
+    height: 1px;
+    top: 4px;
+}
+.screw.tl { top: 6px; left: 6px; }
+.screw.tr { top: 6px; right: 6px; }
+.screw.bl { bottom: 6px; left: 6px; }
+.screw.br { bottom: 6px; right: 6px; }
+
+/* Ventilation slots */
+.vents {
+    display: flex;
+    gap: 3px;
+    pointer-events: none;
+}
+.vents::before,
+.vents::after,
+.vents i {
+    content: '';
+    display: block;
+    width: 3px;
+    height: 100%;
+    min-height: 14px;
+    border-radius: 2px;
+    background: linear-gradient(180deg, var(--chassis-edge), var(--chassis-lo));
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5), 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+/* Label tape — dymo strip. Put a module name on it. */
+.tape {
+    display: inline-block;
+    padding: 0.25em 0.7em;
+    background: var(--tape);
+    color: #fdf3e8;
+    font-family: var(--f-mono);
+    font-size: var(--label-size);
+    font-weight: 600;
+    letter-spacing: var(--label-track);
+    text-transform: uppercase;
+    border-radius: 2px;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.3),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.25),
+        0 1px 2px rgba(0, 0, 0, 0.35);
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
+}
+.tape-alt { background: var(--caution); color: var(--tape-ink); text-shadow: none; }
+.tape-cool { background: var(--cyan); color: #06222a; text-shadow: none; }
+
+/* Hazard stripes — destructive controls only */
+.hazard {
+    background-image: repeating-linear-gradient(
+        45deg,
+        var(--caution) 0 8px,
+        #2a2724 8px 16px
+    );
+}
+
+/* ── 4. PLANE TWO: SCREEN ────────────────────────────────────────────────── */
+
+.bezel {
+    position: relative;
+    background: linear-gradient(180deg, var(--panel-hi) 0%, var(--panel) 40%, var(--panel-lo) 100%);
+    border-radius: var(--r-chassis);
+    padding: 10px;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.09),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.6),
+        0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.screen {
+    position: relative;
+    background: var(--screen);
+    border-radius: var(--r-screen);
+    color: var(--phos);
+    font-family: var(--f-mono);
+    overflow: hidden;
+    box-shadow:
+        inset 0 2px 6px rgba(0, 0, 0, 0.95),
+        inset 0 0 0 1px var(--screen-edge),
+        inset 0 0 60px rgba(0, 0, 0, 0.55);
+}
+
+/* Scanlines + vignette. Kept at low opacity on purpose — texture, not costume. */
+.screen::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+        180deg,
+        rgba(0, 0, 0, 0) 0px,
+        rgba(0, 0, 0, 0) 2px,
+        rgba(0, 0, 0, 0.045) 3px,
+        rgba(0, 0, 0, 0.045) 4px
+    );
+}
+.screen::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    background: radial-gradient(ellipse 100% 100% at 50% 50%, transparent 58%, rgba(0, 0, 0, 0.55) 100%);
+}
+.screen.flat::before, .screen.flat::after { display: none; }
+
+/* Phosphor text */
+.phos      { color: var(--phos); text-shadow: 0 0 8px var(--phos-glow); }
+.phos-dim  { color: var(--phos-dim); }
+.phos-amber{ color: var(--amber); text-shadow: 0 0 8px rgba(255, 176, 0, 0.25); }
+.phos-green{ color: var(--green); text-shadow: 0 0 8px rgba(124, 255, 155, 0.22); }
+.phos-red  { color: var(--alert); text-shadow: 0 0 8px rgba(196, 54, 43, 0.3); }
+
+/* CRT power-on wipe. Once per session, ~380ms. */
+@keyframes crt-on {
+    0%   { transform: scaleY(0.004) scaleX(0.85); opacity: 0; filter: brightness(3); }
+    45%  { transform: scaleY(0.02) scaleX(1); opacity: 1; filter: brightness(2.2); }
+    100% { transform: scaleY(1) scaleX(1); opacity: 1; filter: brightness(1); }
+}
+.crt-on > * { animation: crt-on 380ms cubic-bezier(0.2, 0, 0.15, 1) both; }
+
+/* ── 5. CONTROLS: KEYCAPS ────────────────────────────────────────────────── */
+
+.key {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5em;
+    min-height: 34px;
+    padding: 0.45em 0.9em;
+    font-family: var(--f-mono);
+    font-size: var(--label-size);
+    font-weight: 600;
+    letter-spacing: var(--label-track);
+    text-transform: uppercase;
+    text-decoration: none;          /* .key is used on <a> as often as <button> */
+    color: var(--ink);
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+    background: linear-gradient(180deg, var(--chassis-hi) 0%, var(--chassis) 55%, var(--chassis-lo) 100%);
+    border: 1px solid var(--chassis-edge);
+    border-radius: var(--r-key);
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.7),
+        inset 0 -1px 2px rgba(0, 0, 0, 0.2),
+        0 2px 0 var(--chassis-deep),
+        0 3px 4px rgba(0, 0, 0, 0.35);
+    transition: transform var(--travel), box-shadow var(--travel), background var(--travel);
+}
+
+.key:hover { background: linear-gradient(180deg, #e6e1d3 0%, var(--chassis-hi) 55%, var(--chassis) 100%); }
+
+/* Real travel: the cap goes down, the shadow under it collapses. */
+.key:active,
+.key[aria-pressed="true"] {
+    transform: translateY(2px);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.35),
+        inset 0 2px 4px rgba(0, 0, 0, 0.25),
+        0 0 0 var(--chassis-deep);
+}
+
+.key:focus-visible {
+    outline: 2px solid var(--tape);
+    outline-offset: 2px;
+}
+
+.key[disabled] { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+/* Icon-only keycap */
+.key-sq { width: 34px; min-height: 34px; padding: 0; }
+.key svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+/* Latching key — stays down while its mode is active */
+.key.latched {
+    background: linear-gradient(180deg, var(--chassis-lo) 0%, var(--chassis) 100%);
+    transform: translateY(2px);
+    box-shadow:
+        inset 0 2px 5px rgba(0, 0, 0, 0.3),
+        0 0 0 var(--chassis-deep);
+}
+
+/* Destructive key — hazard stripe underlay */
+.key-danger {
+    color: #fdf3e8;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5);
+    background: linear-gradient(180deg, #d1483c 0%, var(--alert) 55%, #9d2a21 100%);
+    border-color: #7d2019;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.28),
+        0 2px 0 #6a1811,
+        0 3px 4px rgba(0, 0, 0, 0.35);
+}
+.key-danger:hover { background: linear-gradient(180deg, #e0574a 0%, #cd3b2f 55%, #a92f25 100%); }
+.key-danger:active { transform: translateY(2px); box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.35), 0 0 0 #6a1811; }
+
+/* ── 6. CONTROLS: ROCKER SWITCH ──────────────────────────────────────────── */
+
+.rocker {
+    position: relative;
+    display: inline-block;
+    width: 52px;
+    height: 26px;
+    flex-shrink: 0;
+    background: linear-gradient(180deg, var(--panel-lo), var(--panel));
+    border: 1px solid #111;
+    border-radius: 3px;
+    cursor: pointer;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.7), 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+.rocker input { position: absolute; opacity: 0; width: 0; height: 0; }
+
+.rocker .rock {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 24px;
+    height: 20px;
+    border-radius: 2px;
+    background: linear-gradient(180deg, var(--chassis-hi), var(--chassis-lo) 70%, var(--chassis-edge));
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.8),
+        0 1px 3px rgba(0, 0, 0, 0.6);
+    transition: transform var(--travel), background var(--travel);
+}
+/* Tilt: the raised half catches light, the pressed half sinks */
+.rocker input:not(:checked) + .rock {
+    background: linear-gradient(180deg, var(--chassis-lo), var(--chassis-edge));
+    box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.4), 0 1px 1px rgba(0, 0, 0, 0.4);
+}
+.rocker input:checked + .rock { transform: translateX(24px); }
+.rocker input:focus-visible + .rock { outline: 2px solid var(--tape); outline-offset: 2px; }
+
+/* ── 7. INDICATORS: LED LAMPS ────────────────────────────────────────────── */
+
+.led {
+    position: relative;
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    /* off state: a dark bulb in a metal collar */
+    background: radial-gradient(circle at 35% 30%, #6d2b22, #3a1310 60%, #240b09 100%);
+    box-shadow:
+        inset 0 1px 1px rgba(255, 255, 255, 0.25),
+        inset 0 -1px 2px rgba(0, 0, 0, 0.8),
+        0 0 0 1px rgba(0, 0, 0, 0.45);
+    transition: background var(--snap), box-shadow var(--snap);
+}
+.led.on {
+    background: radial-gradient(circle at 35% 30%, #ffe9b0, var(--amber) 45%, #a86e00 100%);
+    box-shadow:
+        inset 0 -1px 2px rgba(0, 0, 0, 0.35),
+        0 0 0 1px rgba(0, 0, 0, 0.4),
+        0 0 7px 1px rgba(255, 176, 0, 0.75),
+        0 0 16px rgba(255, 176, 0, 0.35);
+}
+.led.on.green {
+    background: radial-gradient(circle at 35% 30%, #dfffe8, var(--green) 45%, #2f8046 100%);
+    box-shadow:
+        inset 0 -1px 2px rgba(0, 0, 0, 0.35),
+        0 0 0 1px rgba(0, 0, 0, 0.4),
+        0 0 7px 1px rgba(124, 255, 155, 0.6),
+        0 0 16px rgba(124, 255, 155, 0.28);
+}
+.led.on.red {
+    background: radial-gradient(circle at 35% 30%, #ffc9c2, var(--alert) 45%, #7d201a 100%);
+    box-shadow:
+        inset 0 -1px 2px rgba(0, 0, 0, 0.35),
+        0 0 0 1px rgba(0, 0, 0, 0.4),
+        0 0 7px 1px rgba(196, 54, 43, 0.6);
+}
+@keyframes lamp-blink { 0%, 45% { opacity: 1; } 55%, 100% { opacity: 0.25; } }
+.led.blink { animation: lamp-blink 1.6s steps(1, end) infinite; }
+
+/* ── 8. INDICATORS: SEVEN-SEGMENT READOUT ────────────────────────────────── */
+
+.seg {
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px 6px;
+    background: var(--screen-deep);
+    border-radius: 2px;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.9), inset 0 0 0 1px #1a1c17;
+}
+/* Sized in em so the readouts scale with browser text-size preference —
+   in px they were the one element on the machine that ignored zoom. */
+.seg-digit {
+    position: relative;
+    font-size: var(--label-size);
+    width: 1.1em;
+    height: 1.9em;
+    flex-shrink: 0;
+}
+/* Seven bars: a b c d e f g */
+.seg-digit i {
+    position: absolute;
+    background: var(--amber);
+    opacity: 0.07;                 /* unlit segments stay faintly visible, like real LEDs */
+    transition: opacity var(--snap);
+}
+.seg-digit i.on { opacity: 1; box-shadow: 0 0 4px rgba(255, 176, 0, 0.7); }
+.seg-digit i.a { top: 0;      left: 2px;  right: 2px; height: 2px; }
+.seg-digit i.b { top: 2px;    right: 0;   width: 2px; height: 6px; }
+.seg-digit i.c { bottom: 2px; right: 0;   width: 2px; height: 6px; }
+.seg-digit i.d { bottom: 0;   left: 2px;  right: 2px; height: 2px; }
+.seg-digit i.e { bottom: 2px; left: 0;    width: 2px; height: 6px; }
+.seg-digit i.f { top: 2px;    left: 0;    width: 2px; height: 6px; }
+.seg-digit i.g { top: 50%;    left: 2px;  right: 2px; height: 2px; margin-top: -1px; }
+
+/* ── 9. METER / TAPE REELS ───────────────────────────────────────────────── */
+
+.meter {
+    height: 6px;
+    background: var(--screen-deep);
+    border-radius: 2px;
+    overflow: hidden;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.9);
+}
+.meter i {
+    display: block;
+    height: 100%;
+    width: 0;
+    background: linear-gradient(90deg, var(--green), var(--caution) 70%, var(--alert));
+    transition: width var(--slide);
+}
+
+@keyframes reel-spin { to { transform: rotate(360deg); } }
+.reel {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 2px solid var(--panel-lo);
+    background:
+        radial-gradient(circle at 50% 50%, transparent 0 5px, var(--chassis-lo) 5px 7px, transparent 7px),
+        conic-gradient(from 0deg, #2a2a2c 0deg 18deg, #3a3a3d 18deg 36deg,
+                       #2a2a2c 36deg 54deg, #3a3a3d 54deg 72deg,
+                       #2a2a2c 72deg 90deg, #3a3a3d 90deg 108deg,
+                       #2a2a2c 108deg 126deg, #3a3a3d 126deg 144deg,
+                       #2a2a2c 144deg 162deg, #3a3a3d 162deg 180deg,
+                       #2a2a2c 180deg 198deg, #3a3a3d 198deg 216deg,
+                       #2a2a2c 216deg 234deg, #3a3a3d 234deg 252deg,
+                       #2a2a2c 252deg 270deg, #3a3a3d 270deg 288deg,
+                       #2a2a2c 288deg 306deg, #3a3a3d 306deg 324deg,
+                       #2a2a2c 324deg 342deg, #3a3a3d 342deg 360deg);
+    box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.8), 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+.reel.spin { animation: reel-spin 2.4s linear infinite; }
+
+/* ── 10. FIELDS ──────────────────────────────────────────────────────────── */
+
+.field {
+    width: 100%;
+    padding: 0.55em 0.7em;
+    font-family: var(--f-mono);
+    font-size: 0.8rem;
+    color: var(--phos);
+    background: var(--screen-deep);
+    border: 1px solid #000;
+    border-radius: 2px;
+    outline: none;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.85);
+    caret-color: var(--phos);
+}
+.field::placeholder { color: var(--phos-faint); }
+.field:focus { box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.85), 0 0 0 2px var(--tape); }
+
+select.field {
+    color: var(--phos);
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, var(--phos-dim) 50%),
+                      linear-gradient(135deg, var(--phos-dim) 50%, transparent 50%);
+    background-position: calc(100% - 14px) 52%, calc(100% - 9px) 52%;
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+    padding-right: 26px;
+}
+select.field option { background: var(--panel); color: #ded9ca; }
+
+/* ── 11. RIBBON / PRINTOUT ───────────────────────────────────────────────── */
+
+/* Tractor-feed paper edge — for anything that reads as output */
+.printout {
+    position: relative;
+    background: var(--paper);
+    color: #23201b;
+    font-family: var(--f-mono);
+    padding: 12px 26px;
+}
+.printout::before,
+.printout::after {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 16px;
+    background-image: radial-gradient(circle at 50% 8px, #23201b 0 3px, transparent 3px);
+    background-size: 16px 22px;
+    background-repeat: repeat-y;
+    opacity: 0.32;
+}
+.printout::before { left: 0; }
+.printout::after  { right: 0; }
+
+/* ── 12. TOAST ───────────────────────────────────────────────────────────── */
+
+.readout-toast {
+    position: fixed;
+    left: 50%;
+    bottom: 22px;
+    transform: translateX(-50%) translateY(10px);
+    z-index: 900;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 8px 16px;
+    background: var(--panel);
+    border: 1px solid #111;
+    border-radius: 3px;
+    font-family: var(--f-mono);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--amber);
+    box-shadow: 0 6px 22px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--slide), transform var(--slide);
+    white-space: nowrap;
+    max-width: calc(100vw - 32px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.readout-toast.up { opacity: 1; transform: translateX(-50%) translateY(0); }
+.readout-toast.bad { color: var(--alert); }
+
+/* ── 13. MODAL — a service panel that swings open ─────────────────────────── */
+
+.panel-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(8, 8, 5, 0.72);
+}
+.panel-modal.open { display: flex; }
+.panel-modal .sheet {
+    width: 100%;
+    max-width: 340px;
+    padding: 18px;
+    animation: sheet-in 150ms cubic-bezier(0.2, 0, 0.15, 1) both;
+}
+@keyframes sheet-in {
+    from { transform: translateY(8px) scale(0.985); opacity: 0; }
+    to   { transform: none; opacity: 1; }
+}
+
+/* ── 14. UTILITIES ───────────────────────────────────────────────────────── */
+
+.row     { display: flex; align-items: center; gap: 10px; }
+.row-tight { display: flex; align-items: center; gap: 6px; }
+.spacer  { flex: 1 1 auto; }
+.stack   { display: flex; flex-direction: column; gap: 10px; }
+.sr-only {
+    position: absolute; width: 1px; height: 1px;
+    padding: 0; margin: -1px; overflow: hidden;
+    clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+.rule {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--chassis-edge) 15%, var(--chassis-edge) 85%, transparent);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+/* ── 15. REDUCED MOTION ──────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+    }
+    .screen::before { display: none; }   /* scanlines off too */
+    .reel.spin, .led.blink { animation: none !important; }
+}
+
+/* ── 16. TOUCH ───────────────────────────────────────────────────────────
+   34px is the mouse-pointer cap size. A finger needs 44px, and the pages
+   cannot each remember that — one rule covers every keycap on the machine. */
+
+@media (pointer: coarse) {
+    .key    { min-height: 44px; }
+    .key-sq { width: 44px; min-height: 44px; }
+}
+
+/* ── 17. FORCED COLORS ───────────────────────────────────────────────────
+   This machine is built out of backgrounds, gradients and box-shadows —
+   exactly what forced-colors mode strips. Without this the seven-segment
+   readouts become empty boxes and the rocker loses its thumb entirely. */
+
+@media (forced-colors: active) {
+    .seg-digit i        { background: GrayText; forced-color-adjust: none; opacity: 1; }
+    .seg-digit i.on     { background: CanvasText; }
+    .rocker             { border: 1px solid ButtonText; }
+    .rocker .rock       { background: ButtonText; forced-color-adjust: none; }
+    .led                { border: 2px solid GrayText; }
+    .led.on             { border-color: CanvasText; }
+    .tape               { border: 1px solid CanvasText; }
+    .key                { border: 1px solid ButtonText; }
+    .meter              { border: 1px solid GrayText; }
+    .meter i            { background: CanvasText; forced-color-adjust: none; }
+    .screen             { border: 1px solid CanvasText; }
+}
+
+/* ── 18. PRINT ───────────────────────────────────────────────────────────
+   Browsers drop background paint, so every phosphor readout would print as
+   amber on white (~1.9:1). Flip the screen plane to ink-on-paper, drop the
+   hardware furniture, and release the app-shell height clamps so the whole
+   document prints instead of one viewport. */
+
+@media print {
+    html, body {
+        height: auto !important;
+        min-height: 0 !important;
+        overflow: visible !important;
+        background: #fff !important;
+    }
+    .screen, .screen *, .field, .bezel {
+        background: #fff !important;
+        color: #000 !important;
+        text-shadow: none !important;
+        box-shadow: none !important;
+    }
+    .chassis, .chassis::after { background: none !important; box-shadow: none !important; }
+    .chassis { border: 1px solid #000 !important; }
+    .engraved, .label, .designation, .prose { color: #000 !important; text-shadow: none !important; }
+    .tape { background: none !important; color: #000 !important; border: 1px solid #000; }
+    .screw, .vents, .led, .rocker, .seg, .reel, .meter,
+    .readout-toast, .panel-modal { display: none !important; }
+}

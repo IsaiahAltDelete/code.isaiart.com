@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#2a2a2c">
+<title>404 — Page Not Found</title>
+<meta name="description" content="That page does not exist on code.isaiart.com.">
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/cassette.css">
+<script src="/assets/cassette.js"></script>
+<style>
+    body { display: flex; align-items: center; justify-content: center; padding: 24px; min-height: 100dvh; }
+    .panel-404 { width: 100%; max-width: 430px; padding: 20px; }
+    .well { padding: 18px 16px; text-align: center; line-height: 1.9; font-size: 0.78rem; letter-spacing: 0.1em; }
+    .code { font-family: var(--f-display); font-size: 2.6rem; font-weight: 700; letter-spacing: 0.12em; line-height: 1.1; }
+    .bar { margin: 16px 0 14px; }
+    .foot { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+</style>
+</head>
+<body>
+<main class="panel-404 chassis">
+    <span class="screw tl"></span><span class="screw tr"></span>
+    <span class="screw bl"></span><span class="screw br"></span>
+
+    <div class="row" style="margin-bottom:14px">
+        <span class="tape">404</span>
+        <span class="label">CODE.ISAIART.COM</span>
+        <span class="spacer"></span>
+        <span class="led on red blink" aria-hidden="true"></span>
+    </div>
+
+    <div class="bezel">
+        <div class="screen well" id="well">
+            <div class="code phos">404</div>
+            <div class="phos-dim" style="margin-top:10px">PAGE NOT FOUND</div>
+            <div class="phos-dim" id="path" style="word-break:break-all"></div>
+        </div>
+    </div>
+
+    <div class="bar rule"></div>
+
+    <div class="foot">
+        <a class="key" href="/">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/><path d="M20 12H8"/></svg>
+            TOOLS
+        </a>
+        <a class="key" href="/editor/">CODE EDITOR</a>
+        <a class="key" href="/mobile/">MOBILE EDITOR</a>
+        <span class="spacer"></span>
+    </div>
+</main>
+
+<script>
+    document.getElementById('path').textContent = '> ' + location.pathname;
+    CAS.bootOnce(document.getElementById('well'));
+</script>
+</body>
+</html>
