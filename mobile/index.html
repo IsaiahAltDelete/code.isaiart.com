@@ -97,8 +97,20 @@ html, body {
     .desig { font-size: 13px; }
 }
 
+/* Below 480px the selector is swatches only — three words do not fit a phone
+   header, and the swatches already say amber / green / cream. */
 .phos-lbl { display: none; }
 @media (min-width: 480px) { .phos-lbl { display: inline; } }
+
+/* Three throws are ~34px wider than the rocker they replaced, and the bar had
+   about that much slack at 360px. The two decorative pieces pay for it: the
+   vent stripe first, then the ready lamp, neither of which carries meaning
+   the readout below does not already show. */
+@media (max-width: 479px) {
+    .selector label { padding: 0 5px; }
+}
+@media (max-width: 439px) { .head-stripe { display: none; } }
+@media (max-width: 379px) { .head-led { display: none; } }
 
 /* ── Punch strip (quick insert) ───────────────────────────────────────── */
 
@@ -175,7 +187,7 @@ html, body {
     overflow: hidden;
     position: relative;
     z-index: 1;
-    background: rgba(0, 0, 0, 0.34);
+    background: var(--wash);
     border-right: 1px solid var(--screen-edge);
 }
 .well.no-gutter .gutter { display: none; }
@@ -305,7 +317,7 @@ html, body {
     inset: 0;
     z-index: 800;
     display: none;
-    background: rgba(8, 8, 5, 0.86);
+    background: var(--cover);
 }
 .overlay.open { display: block; }
 .overlay .app { height: 100dvh; }
@@ -370,13 +382,15 @@ html, body {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="2"/><path d="M12 8.5v7"/><path d="M8.5 12h7"/></svg>
         </button>
 
-        <span class="led on green" title="Ready" aria-hidden="true"></span>
-        <span class="label phos-lbl">AMBER</span>
-        <label class="rocker" title="Display colour">
-            <input type="checkbox" id="phos-sw" aria-label="Display colour: amber or green">
-            <span class="rock"></span>
-        </label>
-        <span class="label phos-lbl">GREEN</span>
+        <span class="led on green head-led" title="Ready" aria-hidden="true"></span>
+        <div class="selector phos-sel" role="radiogroup" aria-label="Display mode">
+            <input type="radio" name="phos" id="phos-amber" value="amber">
+            <label for="phos-amber"><i class="swatch swatch-amber" aria-hidden="true"></i><span class="phos-lbl">Amber</span></label>
+            <input type="radio" name="phos" id="phos-green" value="green">
+            <label for="phos-green"><i class="swatch swatch-green" aria-hidden="true"></i><span class="phos-lbl">Green</span></label>
+            <input type="radio" name="phos" id="phos-cream" value="cream">
+            <label for="phos-cream"><i class="swatch swatch-cream" aria-hidden="true"></i><span class="phos-lbl">Cream</span></label>
+        </div>
 
         <button class="key key-sq" id="btn-svc" aria-label="Settings" title="Settings">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h9"/><path d="M17 7h4"/><path d="M3 17h5"/><path d="M13 17h8"/><circle cx="14.5" cy="7" r="2.2"/><circle cx="10.5" cy="17" r="2.2"/></svg>
@@ -1076,15 +1090,27 @@ html, body {
         if (e.key === 'Enter') { e.preventDefault(); doSave(); }
     });
 
-    /* ── Phosphor rocker ──────────────────────────────────────────────── */
+    /* ── Display selector ─────────────────────────────────────────────── */
 
-    var phosSw = $('phos-sw');
-    phosSw.checked = CAS.getPhosphor() === 'green';
-    phosSw.addEventListener('change', function () {
-        var mode = CAS.togglePhosphor();
-        phosSw.checked = mode === 'green';
-        CAS.toast(mode === 'green' ? 'GREEN DISPLAY' : 'AMBER DISPLAY');
-    });
+    var phosInputs = document.querySelectorAll('.phos-sel input[name="phos"]');
+
+    function syncPhos(mode) {
+        for (var i = 0; i < phosInputs.length; i++) {
+            phosInputs[i].checked = phosInputs[i].value === mode;
+        }
+    }
+
+    syncPhos(CAS.getPhosphor());
+
+    for (var pi = 0; pi < phosInputs.length; pi++) {
+        phosInputs[pi].addEventListener('change', function () {
+            /* setPhosphor answers with what it actually applied, so a value it
+               rejects re-seats the switch instead of stranding it. */
+            var mode = CAS.setPhosphor(this.value);
+            syncPhos(mode);
+            CAS.toast(mode.toUpperCase() + ' DISPLAY');
+        });
+    }
 
     /* ── Global keys ──────────────────────────────────────────────────── */
 
