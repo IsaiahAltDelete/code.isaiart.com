@@ -5,35 +5,40 @@
 (function () {
     'use strict';
 
-    var PHOSPHOR_KEY = 'isa.phosphor';
+    var THEME_KEY = 'isa.phosphor';   /* the old key name — kept so an existing
+                                         choice survives the rename */
 
-    /* ── Display selector (P3 amber / P1 green / cream) ──────────────────── */
+    /* ── Theme (dark / light) ────────────────────────────────────────────── */
 
-    /* Position order is the order the switch is wired in, and the order
-       togglePhosphor cycles through. Cream sits last so a stored 'green' from
-       before it existed still lands where it always did. */
-    var MODES = ['amber', 'green', 'cream'];
+    /* This used to pick a phosphor: amber or green, two lit tubes. It now
+       picks dark or light, which is what a display switch is actually for.
+       The old values still arrive from storage, so they map on the way in —
+       both tubes were dark, so both land on dark. */
+    var MODES = ['dark', 'light'];
+    var LEGACY = { amber: 'dark', green: 'dark', cream: 'light' };
 
     /* The applied mode is held in memory, not re-read from storage. Reading it
        back made the switch one-way wherever storage is blocked (private mode):
-       getPhosphor() always answered 'amber', so toggle always returned 'green'. */
+       the getter always answered with the default, so toggle always returned
+       the same other value. */
     var applied = null;
 
     function normalize(mode) {
-        return MODES.indexOf(mode) > -1 ? mode : 'amber';
+        if (MODES.indexOf(mode) > -1) return mode;
+        return LEGACY[mode] || 'dark';
     }
 
-    function getPhosphor() {
+    function getTheme() {
         if (applied) return applied;
         var stored = null;
-        try { stored = localStorage.getItem(PHOSPHOR_KEY); } catch (e) {}
+        try { stored = localStorage.getItem(THEME_KEY); } catch (e) {}
         applied = normalize(stored);
         return applied;
     }
 
     /* The phone browser paints its own chrome from <meta name="theme-color">,
        and that tag cannot reference a variable — so a static value leaves the
-       status bar dark while the page under it is cream. Read the ground back
+       status bar dark while the page under it is light. Read the ground back
        out after the attribute lands and write it across. */
     function syncThemeColor() {
         var meta = document.querySelector('meta[name="theme-color"]');
@@ -44,23 +49,23 @@
         if (v) meta.setAttribute('content', v);
     }
 
-    function setPhosphor(mode) {
+    function setTheme(mode) {
         var m = normalize(mode);
         applied = m;
-        document.documentElement.setAttribute('data-phosphor', m);
-        try { localStorage.setItem(PHOSPHOR_KEY, m); } catch (e) {}
+        document.documentElement.setAttribute('data-theme', m);
+        try { localStorage.setItem(THEME_KEY, m); } catch (e) {}
         syncThemeColor();
         return m;
     }
 
-    function togglePhosphor() {
-        return setPhosphor(MODES[(MODES.indexOf(getPhosphor()) + 1) % MODES.length]);
+    function toggleTheme() {
+        return setTheme(getTheme() === 'dark' ? 'light' : 'dark');
     }
 
-    /* Apply immediately so the page never flashes the wrong phosphor. The
-       theme colour has to wait for <head> to have a stylesheet and a meta tag
-       to read — this script runs before both. */
-    document.documentElement.setAttribute('data-phosphor', getPhosphor());
+    /* Apply immediately so the page never flashes the wrong theme. The theme
+       colour has to wait for <head> to have a stylesheet and a meta tag to
+       read — this script runs before both. */
+    document.documentElement.setAttribute('data-theme', getTheme());
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', syncThemeColor);
@@ -492,10 +497,16 @@
     }
 
     window.CAS = {
-        PHOSPHORS: MODES,
-        getPhosphor: getPhosphor,
-        setPhosphor: setPhosphor,
-        togglePhosphor: togglePhosphor,
+        THEMES: MODES,
+        getTheme: getTheme,
+        setTheme: setTheme,
+        toggleTheme: toggleTheme,
+        /* Deprecated phosphor names. The archived tools still call these and
+           are kept exactly as they were, so the old spelling stays wired to
+           the new switch rather than being deleted out from under them. */
+        getPhosphor: getTheme,
+        setPhosphor: setTheme,
+        togglePhosphor: toggleTheme,
         toast: toast,
         segInit: segInit,
         segSet: segSet,
