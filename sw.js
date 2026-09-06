@@ -3,7 +3,7 @@
    Keeps the tools usable with no network. Bump CACHE on every deploy.
    ========================================================================= */
 
-const CACHE = 'isa-v1';
+const CACHE = 'isa-v2';
 
 /* Shipped with the site — precached on install. */
 const SHELL = [

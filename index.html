@@ -96,7 +96,9 @@
 
 .lamp { display: flex; align-items: center; gap: 7px; }
 
-.phos-sw { display: flex; align-items: center; gap: 8px; }
+.phos-sw { flex: 0 0 auto; }
+/* Swatches only once the head controls start crowding — they carry it alone. */
+@media (max-width: 560px) { .phos-sw .phos-txt { display: none; } }
 
 @media (min-width: 520px) {
     .head-row { grid-template-columns: 1fr auto; }
@@ -329,13 +331,13 @@
                     <span class="label">PWR</span>
                 </div>
 
-                <div class="phos-sw">
-                    <span class="label">AMBER</span>
-                    <label class="rocker">
-                        <input type="checkbox" id="phosSw" aria-label="Display colour: amber or green">
-                        <span class="rock"></span>
-                    </label>
-                    <span class="label">GREEN</span>
+                <div class="selector phos-sw" role="radiogroup" aria-label="Display mode">
+                    <input type="radio" name="phos" id="phosAmber" value="amber">
+                    <label for="phosAmber"><i class="swatch swatch-amber" aria-hidden="true"></i><span class="phos-txt">Amber</span></label>
+                    <input type="radio" name="phos" id="phosGreen" value="green">
+                    <label for="phosGreen"><i class="swatch swatch-green" aria-hidden="true"></i><span class="phos-txt">Green</span></label>
+                    <input type="radio" name="phos" id="phosCream" value="cream">
+                    <label for="phosCream"><i class="swatch swatch-cream" aria-hidden="true"></i><span class="phos-txt">Cream</span></label>
                 </div>
             </div>
 
@@ -434,12 +436,12 @@
     tickClock();
     setInterval(tickClock, 1000);
 
-    /* ── Phosphor rocker (P3 amber / P1 green) ──────────────────────────── */
-    var sw = doc.getElementById('phosSw');
+    /* ── Display selector (P3 amber / P1 green / cream) ─────────────────── */
+    var phosInputs = doc.querySelectorAll('.phos-sw input[name="phos"]');
     var phosColor = '';
 
     /* Fall back through the token, never a literal — a hardcoded amber here
-       would keep stroking amber after the display was switched to green. */
+       would keep stroking amber after the display was switched. */
     function readPhosColor() {
         var cs = getComputedStyle(doc.documentElement);
         var v = (cs.getPropertyValue('--phos') || '').trim() ||
@@ -447,19 +449,26 @@
         if (v) phosColor = v;          /* keep the last known-good otherwise */
     }
 
-    sw.checked = CAS.getPhosphor() === 'green';
+    function syncPhos(mode) {
+        for (var i = 0; i < phosInputs.length; i++) {
+            phosInputs[i].checked = phosInputs[i].value === mode;
+        }
+    }
+
+    syncPhos(CAS.getPhosphor());
     readPhosColor();
 
-    sw.addEventListener('change', function () {
-        var want = sw.checked ? 'green' : 'amber';
-        var mode = CAS.togglePhosphor();
-        /* If storage is unavailable the toggle can't read its own state — force it. */
-        if (mode !== want) mode = CAS.setPhosphor(want);
-        sw.checked = mode === 'green';
-        readPhosColor();
-        if (!running) draw();
-        CAS.toast(mode === 'green' ? 'GREEN DISPLAY' : 'AMBER DISPLAY');
-    });
+    for (var pi = 0; pi < phosInputs.length; pi++) {
+        phosInputs[pi].addEventListener('change', function () {
+            /* setPhosphor answers with what it actually applied, so a value it
+               rejects re-seats the switch instead of stranding it. */
+            var mode = CAS.setPhosphor(this.value);
+            syncPhos(mode);
+            readPhosColor();
+            if (!running) draw();
+            CAS.toast(mode.toUpperCase() + ' DISPLAY');
+        });
+    }
 
     /* ── Oscilloscope ───────────────────────────────────────────────────── */
     var cv = doc.getElementById('scope');

@@ -7,34 +7,66 @@
 
     var PHOSPHOR_KEY = 'isa.phosphor';
 
-    /* ── Phosphor selector (P3 amber / P1 green) ─────────────────────────── */
+    /* ── Display selector (P3 amber / P1 green / cream) ──────────────────── */
+
+    /* Position order is the order the switch is wired in, and the order
+       togglePhosphor cycles through. Cream sits last so a stored 'green' from
+       before it existed still lands where it always did. */
+    var MODES = ['amber', 'green', 'cream'];
 
     /* The applied mode is held in memory, not re-read from storage. Reading it
        back made the switch one-way wherever storage is blocked (private mode):
        getPhosphor() always answered 'amber', so toggle always returned 'green'. */
     var applied = null;
 
+    function normalize(mode) {
+        return MODES.indexOf(mode) > -1 ? mode : 'amber';
+    }
+
     function getPhosphor() {
         if (applied) return applied;
-        try { applied = localStorage.getItem(PHOSPHOR_KEY) || 'amber'; }
-        catch (e) { applied = 'amber'; }
+        var stored = null;
+        try { stored = localStorage.getItem(PHOSPHOR_KEY); } catch (e) {}
+        applied = normalize(stored);
         return applied;
     }
 
+    /* The phone browser paints its own chrome from <meta name="theme-color">,
+       and that tag cannot reference a variable — so a static value leaves the
+       status bar dark while the page under it is cream. Read the ground back
+       out after the attribute lands and write it across. */
+    function syncThemeColor() {
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (!meta) return;
+        var cs = getComputedStyle(document.documentElement);
+        var v = (cs.getPropertyValue('--ground') || '').trim() ||
+                (cs.getPropertyValue('--chassis') || '').trim();
+        if (v) meta.setAttribute('content', v);
+    }
+
     function setPhosphor(mode) {
-        var m = mode === 'green' ? 'green' : 'amber';
+        var m = normalize(mode);
         applied = m;
         document.documentElement.setAttribute('data-phosphor', m);
         try { localStorage.setItem(PHOSPHOR_KEY, m); } catch (e) {}
+        syncThemeColor();
         return m;
     }
 
     function togglePhosphor() {
-        return setPhosphor(getPhosphor() === 'amber' ? 'green' : 'amber');
+        return setPhosphor(MODES[(MODES.indexOf(getPhosphor()) + 1) % MODES.length]);
     }
 
-    /* Apply immediately so the page never flashes the wrong phosphor. */
+    /* Apply immediately so the page never flashes the wrong phosphor. The
+       theme colour has to wait for <head> to have a stylesheet and a meta tag
+       to read — this script runs before both. */
     document.documentElement.setAttribute('data-phosphor', getPhosphor());
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', syncThemeColor);
+    } else {
+        syncThemeColor();
+    }
 
     /* ── file:// link fixup ──────────────────────────────────────────────────
        The pages link to directories — "editor/", "../" — which is what makes
@@ -460,6 +492,7 @@
     }
 
     window.CAS = {
+        PHOSPHORS: MODES,
         getPhosphor: getPhosphor,
         setPhosphor: setPhosphor,
         togglePhosphor: togglePhosphor,

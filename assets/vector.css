@@ -39,6 +39,12 @@
     --phos:        #ffb000;
     --phos-dim:    #b07b06;
     --phos-faint:  #5c4108;
+    /* The emphasis pole — what a phosphor step mixes TOWARDS to stand out.
+       White while the ground is dark; black on cream, where more emphasis
+       means more ink rather than more light. Anything deriving a stronger
+       step mixes toward this token, never toward a literal white, or the
+       whole ramp inverts the moment the display goes light. */
+    --phos-hi:     #ffffff;
 
     /* The stripe. Six flat bands, the identity mark of the whole system. */
     --s1:          #e5484d;
@@ -51,6 +57,17 @@
     --accent:      var(--s3);
     --alert:       var(--s1);
     --ok:          var(--s4);
+    /* Focus ring. A band read as a line has to clear 3:1 against the ground,
+       and which band does that depends on the ground — so it is its own
+       token rather than a stripe colour quoted at each focus rule. */
+    --focus:       var(--s6);
+
+    /* Overlays. Each moves AWAY from the current ground, so all three have to
+       flip with it: --wash tints a surface (gutters, active lines), --scrim
+       dims behind a modal, --cover hides the page behind a full-screen view. */
+    --wash:        rgba(0, 0, 0, 0.34);
+    --scrim:       rgba(5, 6, 8, 0.82);
+    --cover:       rgba(8, 8, 5, 0.86);
 
     --paper:       #e9e6df;
 
@@ -106,6 +123,68 @@
     --phos-dim:   #2b8f52;
     --phos-faint: #1b3f2a;
 }
+
+/* ── CREAM — the light mode ──────────────────────────────────────────────────
+   Amber and green swap one variable: the tube's colour. Cream is not a third
+   tube, it is the lights coming on, so it swaps the ground as well — and in a
+   language with no depth, that is the whole job. Nothing here paints; the
+   ramps below are the same ramps, re-anchored to warm stock:
+
+       ground / panel / well   inverted, warmest surface is the one you write on
+       rule ramp               warm grey hairlines, same three weights
+       ink ramp                inverted, matched to the dark ramp's ratios
+       phos ramp               ink on paper, at the dark ramp's ratios too
+
+   Measured on --well: --phos 14.3:1, --phos-dim 5.6:1, --phos-faint 2.0:1 —
+   the dark mode's own numbers are 10.8:1, 5.4:1 and 2.1:1, so every step of
+   the display keeps the weight it had.
+
+   The six stripe bands do NOT change. They are the identity mark and they read
+   on cream the way Vignelli's read on white. Only the bands doing a job that
+   needs contrast — focus ring, alert, ok, accent — are re-cut deeper, because
+   a 2.2:1 focus ring is not a focus ring. */
+:root[data-phosphor="cream"] {
+    --ground:      #ebe5d5;
+    --ground-2:    #e0d9c6;
+    --panel:       #f4efe3;
+    --well:        #fdfbf4;
+
+    --rule:        #cdc5b2;
+    --rule-hi:     #aba18b;
+    --rule-lo:     #ded7c5;
+
+    --ink:         #23201a;
+    --ink-soft:    #5f594c;
+    --ink-faint:   #7a7363;
+
+    --phos:        #2a2620;
+    --phos-dim:    #6b6455;
+    --phos-faint:  #bdb5a1;
+    --phos-hi:     #000000;
+
+    --accent:      #b3730a;
+    --alert:       #c02a26;
+    --ok:          #1f8a4d;
+    --focus:       #1d5fd0;
+
+    --wash:        rgba(70, 58, 34, 0.07);
+    --scrim:       rgba(48, 42, 28, 0.42);
+    --cover:       rgba(240, 235, 223, 0.94);
+
+    --paper:       #ffffff;
+
+    color-scheme: light;
+}
+
+/* A lit block on a light ground needs an edge or it dissolves into it — the
+   one place the flat language has to draw something extra for cream. */
+:root[data-phosphor="cream"] .led.on {
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.3);
+}
+/* Fixed readouts, re-cut for stock. These two never follow the switch, which
+   on cream means they are the only phosphor colours left that cannot read. */
+:root[data-phosphor="cream"] .phos-amber { color: #8a5b00; }
+:root[data-phosphor="cream"] .phos-green { color: #17703c; }
 
 /* ── 2. RESET & GROUND ───────────────────────────────────────────────────── */
 
@@ -301,7 +380,7 @@ body {
 }
 
 .key:focus-visible {
-    outline: 2px solid var(--s6);
+    outline: 2px solid var(--focus);
     outline-offset: 1px;
 }
 
@@ -336,7 +415,72 @@ body {
     transition: transform var(--snap), background var(--snap);
 }
 .rocker input:checked + .rock { transform: translateX(100%); }
-.rocker input:focus-visible + .rock { outline: 2px solid var(--s6); outline-offset: 2px; }
+.rocker input:focus-visible + .rock { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+/* Three-position switch, drawn as three labelled cells in one ruled frame.
+   A rocker only has two throws and the display has three positions. The
+   selected cell inverts to a solid block — the same thing a latched .key
+   does, because in this language that IS what "on" looks like.
+
+   Markup is a radiogroup: one <input type="radio"> immediately followed by
+   its <label>, repeated. That buys arrow-key traversal and the grouping for
+   free; a row of buttons would have to hand-roll both. */
+.selector {
+    position: relative;
+    display: inline-flex;
+    align-items: stretch;
+    flex-shrink: 0;
+    border: var(--hair) solid var(--rule);
+    border-radius: var(--r);
+}
+.selector input { position: absolute; opacity: 0; width: 0; height: 0; }
+
+.selector label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5em;
+    min-width: 26px;
+    height: 26px;
+    padding: 0 8px;
+    font-family: var(--f-mono);
+    font-size: var(--label-size);
+    font-weight: 500;
+    letter-spacing: var(--label-track);
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    background: transparent;
+    white-space: nowrap;
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: color var(--snap), background var(--snap);
+}
+/* Cell divider — a hairline between throws, never around them. */
+.selector label:nth-of-type(n+2) { border-left: var(--hair) solid var(--rule); }
+.selector label:hover { color: var(--ink); background: var(--ground-2); }
+
+.selector input:checked + label {
+    color: var(--panel);
+    background: var(--ink);
+}
+.selector input:checked + label:hover { color: var(--panel); background: var(--ink); }
+.selector input:focus-visible + label { outline: 2px solid var(--focus); outline-offset: -2px; }
+
+/* Colour swatch — the sample printed in each cell, showing what the display
+   does there. Square and flat, like every other mark in this language, and
+   fixed: a swatch must not follow the mode it is advertising. */
+.swatch {
+    width: 7px;
+    height: 7px;
+    border-radius: 0;
+    flex-shrink: 0;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.35);
+}
+.swatch-amber { background: #ffb000; }
+.swatch-green { background: #4ade80; }
+.swatch-cream { background: #f2ecdd; }
 
 /* ── 7. INDICATORS ───────────────────────────────────────────────────────── */
 
@@ -494,7 +638,7 @@ select.field option { background: var(--panel); color: var(--ink); }
     align-items: center;
     justify-content: center;
     padding: 20px;
-    background: rgba(5, 6, 8, 0.82);
+    background: var(--scrim);
 }
 .panel-modal.open { display: flex; }
 .panel-modal .sheet {
@@ -574,12 +718,18 @@ select.field option { background: var(--panel); color: var(--ink); }
 @media (pointer: coarse) {
     .key    { min-height: 44px; }
     .key-sq { width: 44px; min-height: 44px; }
+    /* The selector does not go to 44px — three throws at that size is a third
+       of a phone header. 30px clears the 24px minimum target with room. */
+    .selector label { height: 30px; min-width: 30px; }
 }
 
 @media (forced-colors: active) {
     .key           { border: 1px solid ButtonText; }
     .rocker        { border: 1px solid ButtonText; }
     .rocker .rock  { background: ButtonText; forced-color-adjust: none; }
+    .selector      { border: 1px solid ButtonText; }
+    .selector input:checked + label { background: Highlight; color: HighlightText; forced-color-adjust: none; }
+    .swatch        { background: ButtonText !important; forced-color-adjust: none; }
     .led           { border: 2px solid GrayText; }
     .led.on        { background: CanvasText; border-color: CanvasText; forced-color-adjust: none; }
     .tape          { border: 1px solid CanvasText; }
@@ -603,5 +753,5 @@ select.field option { background: var(--panel); color: var(--ink); }
     }
     .label, .designation, .prose, .phos, .phos-dim { color: #000 !important; }
     .tape { background: none !important; color: #000 !important; border: 1px solid #000; }
-    .led, .rocker, .seg, .meter, .readout-toast, .panel-modal { display: none !important; }
+    .led, .rocker, .selector, .seg, .meter, .readout-toast, .panel-modal { display: none !important; }
 }

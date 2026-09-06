@@ -29,11 +29,22 @@
     --screen-deep:  #070806;
     --screen-edge:  #1d2119;
 
+    /* Lamp modules — seven-segment banks and meters. These are lamps bolted
+       into the chassis, not part of the display, so they keep their own dark
+       well and stay dark in every display mode. */
+    --readout-well: #070806;
+
     /* Phosphor — the switchable one */
     --phos:         #ffb000;
     --phos-dim:     #b07b06;      /* 5.2:1 on --screen — dim, still readable */
     --phos-faint:   #4a3204;      /* structural only: rules, unlit segments */
     --phos-glow:    rgba(255, 176, 0, 0.28);
+    /* The emphasis pole — what a phosphor step mixes TOWARDS to stand out.
+       On a lit tube that is white. On paper stock it is black, because there
+       "more emphasis" means more ink, not more light. Anything deriving a
+       brighter step must mix toward this token, never toward a literal white,
+       or it inverts the moment the display goes to cream. */
+    --phos-hi:      #ffffff;
 
     /* Fixed phosphors (readouts that never switch) */
     --amber:        #ffb000;
@@ -51,6 +62,14 @@
     --alert-dim:    #4a1712;
     --caution:      #e8b33a;
     --paper:        #ece6d6;      /* output stock: printouts and preview frames */
+    --focus:        var(--tape);  /* focus ring — one token, both languages */
+
+    /* Overlays. Each moves AWAY from the current ground, so all three have to
+       flip with it: --wash tints a surface (gutters, active lines), --scrim
+       dims behind a modal, --cover hides the page behind a full-screen view. */
+    --wash:         rgba(0, 0, 0, 0.34);
+    --scrim:        rgba(8, 8, 5, 0.72);
+    --cover:        rgba(8, 8, 5, 0.86);
 
     /* Ink — engraved text on chassis. These are the only text colours used on
        the beige plane, and the type carrying them is 10px and tracked, so they
@@ -60,6 +79,12 @@
     --ink:          #2c2822;
     --ink-soft:     #544e43;
     --ink-faint:    #5f584c;
+
+    /* Legend — silkscreen printed on the charcoal panel rather than on beige.
+       The ink ramp above is far too dark to read down there (--ink-faint
+       measures 1.4:1 on --panel); this is the one light legend colour, at
+       5.4:1 on the panel and 3.6:1 on its lightest bevel. */
+    --legend:       #a29d91;
 
     /* Geometry */
     --r-chassis:    5px;
@@ -83,12 +108,92 @@
     color-scheme: dark;
 }
 
-/* Phosphor selector — P3 amber (default) / P1 green */
+/* Display selector — P3 amber (default) / P1 green / cream */
 :root[data-phosphor="green"] {
     --phos:       #7cff9b;
     --phos-dim:   #3f8f52;
     --phos-faint: #1d3a25;
     --phos-glow:  rgba(124, 255, 155, 0.22);
+}
+
+/* CREAM — the light mode.
+   Not a third phosphor: the tube is off and the display plane becomes warm
+   stock with ink on it. That is the only way a light mode can work here
+   without breaking the two-plane rule — chassis stays beige plastic, the
+   recessed well stays recessed, and the thing inside it flips from emitted
+   light to reflected. Everything downstream already derives from --phos and
+   --screen, so the whole machine follows from this block.
+
+   Measured on --screen: --phos 13.3:1, --phos-dim 6.3:1, --phos-faint 1.6:1
+   (structural only, the same role it plays on the tube). */
+:root[data-phosphor="cream"] {
+    --screen:       #f1ead9;
+    --screen-deep:  #e5dcc6;
+    --screen-edge:  #cdc3aa;
+
+    --phos:         #26221a;
+    --phos-dim:     #5c5343;
+    --phos-faint:   #c6bca4;
+    /* Ink soaking into stock, not a tube blooming. Barely there on purpose. */
+    --phos-glow:    rgba(38, 34, 26, 0.10);
+    --phos-hi:      #000000;
+
+    --wash:         rgba(70, 58, 34, 0.07);
+    --scrim:        rgba(48, 42, 28, 0.42);
+    --cover:        rgba(240, 235, 223, 0.94);
+
+    color-scheme: light;
+}
+
+/* The room the machine sits in, with the lights on. */
+:root[data-phosphor="cream"] body {
+    background-color: #e7e1d1;
+    background-image:
+        radial-gradient(ellipse 120% 90% at 50% -10%, #f7f2e6 0%, #e5dfce 55%, #cdc6b3 100%);
+}
+
+/* On a dark ground the chassis is lifted by a heavy black shadow. On a lit
+   one that same shadow reads as grime, so warm it and cut its weight — the
+   bevel and the hard 2px edge are already doing most of the separating. */
+:root[data-phosphor="cream"] .chassis {
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.6),
+        inset 0 -2px 3px rgba(0, 0, 0, 0.14),
+        0 2px 0 var(--chassis-deep),
+        0 5px 14px rgba(86, 74, 48, 0.22);
+}
+
+/* The well is still a well — but 0.95-alpha black inset around cream stock
+   looks like a scorch mark, so the recess is re-cut in warm shadow. */
+:root[data-phosphor="cream"] .screen {
+    box-shadow:
+        inset 0 2px 5px rgba(74, 61, 36, 0.28),
+        inset 0 0 0 1px var(--screen-edge),
+        inset 0 0 44px rgba(120, 100, 62, 0.10);
+}
+/* Scanlines become paper tooth, and the vignette a soft edge shadow under
+   the bezel lip. Both stay, at a fraction of their weight — the plane still
+   has to read as the display, not as a sheet taped to the front. */
+:root[data-phosphor="cream"] .screen::before {
+    background: repeating-linear-gradient(
+        180deg,
+        rgba(0, 0, 0, 0) 0px,
+        rgba(0, 0, 0, 0) 2px,
+        rgba(84, 68, 38, 0.028) 3px,
+        rgba(84, 68, 38, 0.028) 4px
+    );
+}
+:root[data-phosphor="cream"] .screen::after {
+    background: radial-gradient(ellipse 100% 100% at 50% 50%, transparent 62%, rgba(96, 79, 46, 0.16) 100%);
+}
+
+/* Fields are cut into the display plane, so they take the same treatment. */
+:root[data-phosphor="cream"] .field {
+    border-color: var(--screen-edge);
+    box-shadow: inset 0 2px 4px rgba(74, 61, 36, 0.26);
+}
+:root[data-phosphor="cream"] .field:focus {
+    box-shadow: inset 0 2px 4px rgba(74, 61, 36, 0.26), 0 0 0 2px var(--tape);
 }
 
 /* ── 2. RESET & GROUND ───────────────────────────────────────────────────── */
@@ -402,7 +507,7 @@ body {
 .key-danger:hover { background: linear-gradient(180deg, #e0574a 0%, #cd3b2f 55%, #a92f25 100%); }
 .key-danger:active { transform: translateY(2px); box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.35), 0 0 0 #6a1811; }
 
-/* ── 6. CONTROLS: ROCKER SWITCH ──────────────────────────────────────────── */
+/* ── 6. CONTROLS: ROCKER + SELECTOR ────────────────────────────────────────── */
 
 .rocker {
     position: relative;
@@ -438,6 +543,77 @@ body {
 }
 .rocker input:checked + .rock { transform: translateX(24px); }
 .rocker input:focus-visible + .rock { outline: 2px solid var(--tape); outline-offset: 2px; }
+
+/* Mode bank — a rocker only has two throws, and the display now has three
+   positions. Same recess, same moulded cap: the selected position rises out
+   of the panel as a keycap and the others stay sunk, so it still reads as a
+   piece of hardware rather than a row of tabs.
+
+   Markup is a radiogroup — one <input type="radio"> immediately followed by
+   its <label>, repeated. That buys arrow-key traversal and the grouping for
+   free; a row of buttons would have to hand-roll both. */
+.selector {
+    position: relative;
+    display: inline-flex;
+    align-items: stretch;
+    gap: 2px;
+    padding: 2px;
+    flex-shrink: 0;
+    background: linear-gradient(180deg, var(--panel-lo), var(--panel));
+    border: 1px solid #111;
+    border-radius: 3px;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.7), 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+.selector input { position: absolute; opacity: 0; width: 0; height: 0; }
+
+.selector label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5em;
+    min-width: 24px;
+    height: 22px;
+    padding: 0 7px;
+    border-radius: 2px;
+    font-family: var(--f-mono);
+    font-size: var(--label-size);
+    font-weight: 600;
+    letter-spacing: var(--label-track);
+    text-transform: uppercase;
+    color: var(--legend);
+    white-space: nowrap;
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+    transition: background var(--travel), color var(--travel), box-shadow var(--travel);
+}
+.selector label:hover { color: #cfcabd; }
+
+/* The seated throw */
+.selector input:checked + label {
+    background: linear-gradient(180deg, var(--chassis-hi), var(--chassis-lo) 70%, var(--chassis-edge));
+    color: var(--ink);
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.8),
+        0 1px 3px rgba(0, 0, 0, 0.6);
+}
+.selector input:checked + label:hover { color: var(--ink); }
+.selector input:focus-visible + label { outline: 2px solid var(--tape); outline-offset: 1px; }
+
+/* Colour swatch — the sample printed beside each position, showing what the
+   display does there. Fixed values on purpose: a swatch is a paint sample,
+   it must not follow the mode it is advertising. */
+.swatch {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: inset 0 -1px 1px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(0, 0, 0, 0.5);
+}
+.swatch-amber { background: var(--amber); }
+.swatch-green { background: var(--green); }
+.swatch-cream { background: var(--paper); }
 
 /* ── 7. INDICATORS: LED LAMPS ────────────────────────────────────────────── */
 
@@ -488,7 +664,7 @@ body {
     display: inline-flex;
     gap: 4px;
     padding: 4px 6px;
-    background: var(--screen-deep);
+    background: var(--readout-well);
     border-radius: 2px;
     box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.9), inset 0 0 0 1px #1a1c17;
 }
@@ -521,7 +697,7 @@ body {
 
 .meter {
     height: 6px;
-    background: var(--screen-deep);
+    background: var(--readout-well);
     border-radius: 2px;
     overflow: hidden;
     box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.9);
@@ -654,7 +830,7 @@ select.field option { background: var(--panel); color: #ded9ca; }
     align-items: center;
     justify-content: center;
     padding: 20px;
-    background: rgba(8, 8, 5, 0.72);
+    background: var(--scrim);
 }
 .panel-modal.open { display: flex; }
 .panel-modal .sheet {
@@ -704,6 +880,9 @@ select.field option { background: var(--panel); color: #ded9ca; }
 @media (pointer: coarse) {
     .key    { min-height: 44px; }
     .key-sq { width: 44px; min-height: 44px; }
+    /* The selector does not go to 44px — three throws at that size is a third
+       of a phone header. 30px clears the 24px minimum target with room. */
+    .selector label { height: 30px; min-width: 30px; }
 }
 
 /* ── 17. FORCED COLORS ───────────────────────────────────────────────────
@@ -716,6 +895,10 @@ select.field option { background: var(--panel); color: #ded9ca; }
     .seg-digit i.on     { background: CanvasText; }
     .rocker             { border: 1px solid ButtonText; }
     .rocker .rock       { background: ButtonText; forced-color-adjust: none; }
+    .selector           { border: 1px solid ButtonText; }
+    .selector label     { border: 1px solid transparent; }
+    .selector input:checked + label { border-color: Highlight; color: Highlight; }
+    .swatch             { background: ButtonText !important; forced-color-adjust: none; }
     .led                { border: 2px solid GrayText; }
     .led.on             { border-color: CanvasText; }
     .tape               { border: 1px solid CanvasText; }
@@ -748,6 +931,6 @@ select.field option { background: var(--panel); color: #ded9ca; }
     .chassis { border: 1px solid #000 !important; }
     .engraved, .label, .designation, .prose { color: #000 !important; text-shadow: none !important; }
     .tape { background: none !important; color: #000 !important; border: 1px solid #000; }
-    .screw, .vents, .led, .rocker, .seg, .reel, .meter,
+    .screw, .vents, .led, .rocker, .selector, .seg, .reel, .meter,
     .readout-toast, .panel-modal { display: none !important; }
 }
