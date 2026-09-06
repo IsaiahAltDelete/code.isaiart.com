@@ -138,7 +138,7 @@ body {
     white-space: nowrap;
 }
 
-.phos-switch { flex: 0 0 auto; }
+.phos-switch { display: flex; align-items: center; gap: 5px; flex: 0 0 auto; }
 
 /* ── FILES (inline in the bar) ─────────────────────────────────── */
 
@@ -562,9 +562,7 @@ li.CodeMirror-hint-active { background: var(--phos-faint); color: var(--phos); }
 }
 
 @media (max-width: 980px) {
-    /* The swatches carry the meaning once the words go — amber, green, cream,
-       and the seated one is the display that is actually on. */
-    .app-head .phos-switch .phos-txt { display: none; }
+    .app-head .phos-switch .label { display: none; }
     /* The page title is the next thing to go — the browser tab and the file
        tab both already say what this is, and dropping it keeps ONE row. */
     .app-head .designation { display: none; }
@@ -666,13 +664,13 @@ li.CodeMirror-hint-active { background: var(--phos-faint); color: var(--phos); }
 
     <span class="tool-sep" aria-hidden="true"></span>
 
-    <div class="selector phos-switch" role="radiogroup" aria-label="Display mode">
-        <input type="radio" name="phos" id="phosAmber" value="amber">
-        <label for="phosAmber"><i class="swatch swatch-amber" aria-hidden="true"></i><span class="phos-txt">Amber</span></label>
-        <input type="radio" name="phos" id="phosGreen" value="green">
-        <label for="phosGreen"><i class="swatch swatch-green" aria-hidden="true"></i><span class="phos-txt">Green</span></label>
-        <input type="radio" name="phos" id="phosCream" value="cream">
-        <label for="phosCream"><i class="swatch swatch-cream" aria-hidden="true"></i><span class="phos-txt">Cream</span></label>
+    <div class="phos-switch">
+        <span class="label">DARK</span>
+        <label class="rocker">
+            <input type="checkbox" id="phosSwitch" aria-label="Light mode">
+            <span class="rock"></span>
+        </label>
+        <span class="label">LIGHT</span>
     </div>
     <span class="led on green" id="ledPower" title="Power" aria-hidden="true"></span>
 </header>
@@ -881,6 +879,7 @@ li.CodeMirror-hint-active { background: var(--phos-faint); color: var(--phos); }
     var elStatsSR  = $('statsSR');
     var elFrame    = $('previewFrame');
     var elScreen   = $('editorScreen');
+    var elPhos     = $('phosSwitch');
     var segLines   = $('segLines');
     var segWords   = $('segWords');
     var segChars   = $('segChars');
@@ -1346,23 +1345,16 @@ li.CodeMirror-hint-active { background: var(--phos-faint); color: var(--phos); }
         });
         cm.on('cursorActivity', updatePos);
 
-        /* ── display selector ────────────────────────────────────────── */
-        var phosInputs = document.querySelectorAll('.phos-switch input[name="phos"]');
-        function syncPhos(mode) {
-            for (var i = 0; i < phosInputs.length; i++) {
-                phosInputs[i].checked = phosInputs[i].value === mode;
-            }
-        }
-        syncPhos(CAS.getPhosphor());
-        for (var pi = 0; pi < phosInputs.length; pi++) {
-            phosInputs[pi].addEventListener('change', function () {
-                /* setPhosphor answers with what it actually applied, so a value
-                   it rejects re-seats the switch instead of stranding it. */
-                var mode = CAS.setPhosphor(this.value);
-                syncPhos(mode);
-                CAS.toast(mode.toUpperCase() + ' DISPLAY');
-            });
-        }
+        /* ── dark / light rocker ─────────────────────────────────────── */
+        elPhos.checked = CAS.getTheme() === 'light';
+        elPhos.addEventListener('change', function () {
+            /* Drive from the checkbox, not from a toggle: where storage is
+               blocked the runtime can't read its own state back, and a toggle
+               there fights the switch the user just threw. */
+            var mode = CAS.setTheme(elPhos.checked ? 'light' : 'dark');
+            elPhos.checked = mode === 'light';
+            CAS.toast(mode === 'light' ? 'LIGHT MODE' : 'DARK MODE');
+        });
 
         /* ── toolbar ─────────────────────────────────────────────────── */
         $('btnLoad').addEventListener('click', function () {

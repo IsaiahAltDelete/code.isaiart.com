@@ -168,8 +168,8 @@
 
 <script>
     var phos = document.getElementById('phos');
-    phos.checked = CAS.getPhosphor() === 'green';
-    phos.addEventListener('change', function () { CAS.setPhosphor(phos.checked ? 'green' : 'amber'); });
+    phos.checked = CAS.getTheme() === 'light';
+    phos.addEventListener('change', function () { CAS.setTheme(phos.checked ? 'light' : 'dark'); });
 </script>
 </body>
 </html>
