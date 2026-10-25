@@ -1,13 +1,14 @@
 {
-  "name": "Coding Tools",
-  "short_name": "Code Tools",
-  "description": "Browser-based coding instruments. No accounts, no build step, no server.",
+  "name": "Code — ISAIART",
+  "short_name": "Code",
+  "description": "A code editor for desktop and phone: tabs, live preview and formatting. Works offline, no accounts.",
   "id": "/",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#16150f",
-  "theme_color": "#2a2a2c",
+  "orientation": "any",
+  "background_color": "#06070b",
+  "theme_color": "#06070b",
   "categories": ["developer", "productivity", "utilities"],
   "icons": [
     { "src": "/assets/icon.svg", "sizes": "any", "type": "image/svg+xml" },
@@ -16,7 +17,6 @@
     { "src": "/assets/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
   "shortcuts": [
-    { "name": "Code Editor", "url": "/editor/" },
-    { "name": "Mobile Editor", "url": "/mobile/" }
+    { "name": "Open the editor", "url": "/#edit" }
   ]
 }

@@ -1,24 +1,61 @@
 # code.isaiart.com
 
-Browser-based coding tools with a cassette-futurism interface. Static HTML, no
-build step, no server, no accounts. Hosted on GitHub Pages at
+A code editor that runs in the browser, on desktop and on phones. Static HTML,
+no build step, no server, no accounts. Hosted on GitHub Pages at
 [code.isaiart.com](https://code.isaiart.com).
 
-## The tools
+## The tool
 
-| | What it is |
+One page, two views (`index.html`):
+
+- **Start screen** — the isaiart.com 404's sky: a lensed star field, hairline
+  bars, Barlow Condensed. Recent files to continue, or start a new web page, a
+  blank file, or open/drop files from your device.
+- **Editor** (`/#edit`) — CodeMirror 5 in a custom "space" theme: file tabs,
+  live sandboxed preview beside the code (linked `.css`/`.js` tabs are inlined),
+  Prettier formatting, find & replace, autocomplete, folding, download. On
+  narrow screens the tabs become a file switcher, the preview a full-screen
+  sheet, and touch devices get a coding key row above the keyboard.
+
+The old desktop editor (`/editor/`) and mobile editor (`/mobile/`) were merged
+into it; both paths now redirect to `/#edit`.
+
+### Storage
+
+Files live in `localStorage` under the desktop editor's original keys, so
+nothing was lost in the merge:
+
+| Key | Holds |
 |---|---|
-| **[Code Editor](https://code.isaiart.com/editor/)** | Desktop editor. CodeMirror core, multi-file tabs, sandboxed live preview, Prettier formatting for HTML/CSS/JS/JSON, find & replace. |
-| **[Mobile Editor](https://code.isaiart.com/mobile/)** | Touch editor. Installs to the home screen, works offline, autosaves as you type. |
+| `codetools.files` | JSON `[{ name, content, updated }]` |
+| `codetools.files.active` | index of the open file |
+| `codetools.prefs` | `{ wrap, lines, prevW }` |
+| `codetools.mobile.imported` | set once the old mobile buffer (`codetools.mobile.content`, left in place) has been imported as its own file |
 
+Previews and "open in a new tab" run user code in an iframe with
+`sandbox="allow-scripts …"` and no `allow-same-origin`, so it can't reach this
+origin's storage or DOM.
 
-## The interface
+### Offline
+
+`sw.js` precaches the page, icons, manifests and the CodeMirror/Prettier files
+from cdnjs, so the full editor works offline after one online visit. CodeMirror
+and Prettier load only when the editor first opens. If the CDN can't be
+reached, the editor falls back to a plain textarea. **Bump `CACHE` in `sw.js`
+on every deploy**, and keep its `LIBS` list in step with `CM_CSS`, `CM_JS` and
+`PRETTIER` in `index.html`.
+
+## Older design systems
+
+`404.html` and `archive/` still use the site's previous interface, kept below
+for reference.
+### The previous interface
 
 Two design languages, one class API. A page moves between them by swapping a
 single `<link>`. **VECTOR** is what the site ships; **CASSETTE** is what it
 grew out of, kept working.
 
-### VECTOR — what's live
+#### VECTOR — what's live
 
 The graphic side of the era rather than the industrial one: NASA technical
 manuals, wireframe vector displays, plotter output, Vignelli-grade colour
@@ -32,7 +69,7 @@ a labelled rectangle that inverts, not a cap that travels.
 The six-band stripe is the identity mark — masthead rule, section divider, or
 a spine down the edge of a panel.
 
-### CASSETTE — the other one
+#### CASSETTE — the other one
 
 Cassette futurism: Nostromo consoles, Apollo DSKY, 1979 Braun industrial
 hardware. Not cyberpunk, not neon, not glassmorphism.
@@ -50,7 +87,7 @@ Everything else follows from that: chunky keycaps with 2px of real travel,
 rocker switches instead of pill toggles, LED lamps and seven-segment readouts
 for status, label tape for names, hazard stripes on destructive controls.
 
-### Dark and light
+#### Dark and light
 
 Both languages carry both. The site opens **dark**; a rocker on every page
 throws it to **light**, and the choice persists across pages and sessions.
@@ -68,7 +105,7 @@ Type is [Chakra Petch](https://fonts.google.com/specimen/Chakra+Petch) for
 headings only, and [IBM Plex Mono](https://fonts.google.com/specimen/IBM+Plex+Mono)
 for everything else including code.
 
-### Building on it
+#### Building on it
 
 ```
 assets/vector.css     design system in use — tokens + every component class
@@ -116,32 +153,24 @@ in-memory editing rather than breaking.
 ## Layout
 
 ```
-index.html                 landing page
-editor/                    desktop code editor
-mobile/                    mobile editor (+ its own manifest)
-assets/                    cassette.css, cassette.js, icons
+index.html                 the editor: start screen + editor
+editor/, mobile/           redirects to /#edit (mobile/ keeps its manifest for existing installs)
+assets/                    icons; vector.css / cassette.css / cassette.js for 404 and archive
 archive/                   retired tools, kept as they were (not linked from the site)
 sw.js                      service worker (bump CACHE on deploy)
-manifest.webmanifest       site-level PWA manifest
+manifest.webmanifest       PWA manifest
 404.html                   not-found page
 CNAME                      GitHub Pages domain
 ```
 
 ## Running locally
 
-Asset paths are relative, so you can double-click any `index.html` and it will
-render — handy for a quick look. Service workers and the PWA install prompt are
-inert on `file://`, so for anything beyond a visual check, serve it:
+Opening `index.html` directly works for a quick look, but service workers and
+installing are inert on `file://`, so serve it:
 
 ```bash
 python -m http.server 8000
 ```
-
-`404.html` is the one exception: its paths stay root-relative on purpose,
-because GitHub Pages serves it at arbitrary URL depths.
-
-After changing anything in `assets/`, bump `CACHE` in `sw.js` — otherwise
-returning visitors keep getting the cached copy.
 
 ## About
 
