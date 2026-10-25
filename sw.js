@@ -1,9 +1,9 @@
 /* ============================================================================
    code.isaiart.com — service worker
-   Keeps the tools usable with no network. Bump CACHE on every deploy.
+   Keeps the editor usable with no network. Bump CACHE on every deploy.
    ========================================================================= */
 
-const CACHE = 'isa-v3';
+const CACHE = 'code-v4';
 
 /* Shipped with the site — precached on install. */
 const SHELL = [
@@ -11,16 +11,33 @@ const SHELL = [
     '/index.html',
     '/editor/',
     '/mobile/',
-    '/archive/',
     '/404.html',
-    '/assets/cassette.css',
-    '/assets/cassette.js',
     '/assets/icon.svg',
+    '/assets/icon-180.png',
     '/assets/icon-192.png',
     '/assets/icon-512.png',
+    '/assets/icon-maskable-512.png',
     '/manifest.webmanifest',
     '/mobile/manifest.webmanifest'
 ];
+
+/* The editor's libraries, also precached so the full editor (not just the
+   start screen) works on the first offline visit. Keep in step with CM_CSS,
+   CM_JS and PRETTIER in index.html. */
+const CM = 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/';
+const LIBS = [
+    'codemirror.min.css', 'addon/dialog/dialog.css', 'addon/fold/foldgutter.css', 'addon/hint/show-hint.css',
+    'codemirror.min.js', 'mode/xml/xml.min.js', 'mode/javascript/javascript.min.js', 'mode/css/css.min.js',
+    'mode/htmlmixed/htmlmixed.min.js', 'addon/search/searchcursor.js', 'addon/dialog/dialog.js',
+    'addon/search/search.js', 'addon/edit/closebrackets.js', 'addon/edit/closetag.js',
+    'addon/edit/matchbrackets.js', 'addon/edit/matchtags.js', 'addon/fold/xml-fold.js',
+    'addon/fold/foldcode.js', 'addon/fold/foldgutter.js', 'addon/fold/brace-fold.js',
+    'addon/comment/comment.js', 'addon/selection/active-line.js', 'addon/hint/show-hint.js',
+    'addon/hint/xml-hint.js', 'addon/hint/html-hint.js'
+].map((f) => CM + f).concat(
+    ['standalone.js', 'parser-html.js', 'parser-postcss.js', 'parser-babel.js']
+        .map((f) => 'https://cdnjs.cloudflare.com/ajax/libs/prettier/2.8.8/' + f)
+);
 
 /* Third-party origins worth keeping offline (fonts, CodeMirror, Prettier). */
 const RUNTIME_HOSTS = [
@@ -34,7 +51,7 @@ self.addEventListener('install', (event) => {
         caches.open(CACHE)
             // addAll is atomic — one 404 would abort the whole install, so add
             // each entry independently and tolerate misses.
-            .then((cache) => Promise.all(SHELL.map((url) => cache.add(url).catch(() => null))))
+            .then((cache) => Promise.all(SHELL.concat(LIBS).map((url) => cache.add(url).catch(() => null))))
             .then(() => self.skipWaiting())
     );
 });
@@ -63,7 +80,7 @@ self.addEventListener('fetch', (event) => {
                     caches.open(CACHE).then((c) => c.put(req, copy));
                     return res;
                 })
-                .catch(() => caches.match(req).then((hit) => hit || caches.match('/index.html')))
+                .catch(() => caches.match(req, { ignoreSearch: true }).then((hit) => hit || caches.match('/index.html')))
         );
         return;
     }

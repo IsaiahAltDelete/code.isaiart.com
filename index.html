@@ -2,576 +2,1914 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#2a2a2c">
-<title>Coding Tools</title>
-<meta name="description" content="Browser-based coding tools: a desktop code editor and a mobile editor that works offline. No accounts, no build step.">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="theme-color" content="#06070b">
+<title>Code — ISAIART</title>
+<meta name="description" content="A code editor that runs in your browser on desktop and phone: tabs, live preview and formatting. Installs, works offline, no accounts.">
 
 <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="assets/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Code">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-
-<link rel="stylesheet" href="assets/vector.css">
-<script src="assets/cassette.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@400;600;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
 <style>
-/* ── Page-level composition only. Primitives come from cassette.css ── */
+/* code.isaiart.com is one tool: a start screen and an editor on one page.
 
-/* Fill the viewport. The page used to be a 430px band of content sitting in a
-   very large empty grid; the plot panel below now absorbs the slack. */
-.page {
-    width: 100%;
-    max-width: 1180px;
-    min-height: 100dvh;
-    margin: 0 auto;
-    padding: 14px 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+   The start screen shares a sky with isaiart.com's 404 — the same near-black,
+   condensed type and hairlines, and the same point-mass lens bending the star
+   field. The editor is the same palette with the sky switched off: hairlines,
+   type and one blue, so the only thing in the window with colour is your
+   code. Nothing glows and nothing is bevelled. */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:      #06070b;
+  --bg-2:    #0a0b11;
+  --bg-3:    #11131b;
+  --rule:    rgba(255,255,255,0.10);
+  --rule-hi: rgba(255,255,255,0.24);
+  --white:   #f4f4f2;
+  --off:     #b9b9b4;
+  --dim:     #8d8d88;
+  --faint:   #5d5f68;
+  --accent:  #8fb4ff;
+  --bad:     #ff8b7b;
+  --bar-h:   56px;
+  --gut:     clamp(18px, 3vw, 56px);
+  --ease:    cubic-bezier(.16,1,.3,1);
+  --cond:    'Barlow Condensed', system-ui, sans-serif;
+  --mono:    'JetBrains Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
 }
 
-/* ── 1. HEADER — CTRL-0 ──────────────────────────────────────────────────── */
-
-.page-head { padding: 16px 20px; }
-
-.head-row {
-    display: grid;
-    grid-template-columns: 1fr;
-    align-items: center;
-    gap: 14px 18px;
+html { background: var(--bg); }
+body {
+  min-height: 100vh; min-height: 100dvh;
+  background: var(--bg); color: var(--white);
+  font-family: 'Barlow', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
+body[data-view="editor"] { overflow: hidden; }
+
+a { color: inherit; }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+:focus-visible { outline: 1px solid var(--accent); outline-offset: 3px; }
+::selection { background: var(--accent); color: var(--bg); }
+[hidden] { display: none !important; }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+svg.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+.micro {
+  font-family: var(--cond); font-size: 0.74rem; font-weight: 400;
+  letter-spacing: 0.22em; text-transform: uppercase; color: var(--dim);
+  font-variant-numeric: tabular-nums;
+}
+.micro b { font-weight: 600; color: var(--off); }
+
+/* ═══════════════════════════════════════════════════════════ START ════ */
+
+space-field {
+  position: fixed; inset: 0; z-index: 0; display: block; pointer-events: none;
+  opacity: 0; transition: opacity 1.4s ease;
+}
+space-field.live { opacity: 1; }
+space-field canvas { width: 100%; height: 100%; display: block; }
+body[data-view="editor"] space-field { display: none; }
+
+#start { position: relative; z-index: 3; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; }
+#start.back-in { animation: fadeIn .5s var(--ease) both; }
+
+.bar {
+  position: relative; z-index: 3;
+  flex: 0 0 auto; min-height: var(--bar-h);
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 0 var(--gut);
+}
+.bar::after {
+  content: ''; position: absolute; left: 0; right: 0; height: 1px; background: var(--rule);
+  transform-origin: left; animation: draw 1.1s var(--ease) .1s both;
+}
+.bar-top::after { bottom: 0; }
+.bar-bot::after { top: 0; transform-origin: right; }
+html.lens-live .bar-top::after { opacity: 0; }
 
 .brand {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 7px;
-    min-width: 0;
+  display: inline-flex; align-items: baseline; gap: 10px;
+  font-family: var(--cond); font-size: 1.15rem; font-weight: 900;
+  letter-spacing: 0.24em; text-transform: uppercase; text-decoration: none;
+  transition: color .2s;
 }
-.brand .designation {
-    font-size: clamp(1rem, 3.4vw, 1.3rem);
-    line-height: 1;
-    letter-spacing: 0.1em;
-}
+.brand span { font-weight: 400; color: var(--dim); letter-spacing: 0.2em; transition: color .2s; }
+.brand:hover, .brand:hover span { color: var(--accent); }
+.bar-group { display: flex; align-items: center; gap: 22px; }
 
-.head-well { min-width: 0; padding: 7px; }
-.head-well .screen { padding: 7px 10px; }
-
-.well-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    min-height: 30px;
+#start main {
+  position: relative; z-index: 3; flex: 1 1 auto;
+  width: 100%; max-width: 1180px; margin: 0 auto;
+  display: flex; flex-direction: column; justify-content: center;
+  padding: clamp(24px, 5vh, 64px) var(--gut);
+  gap: clamp(24px, 3.8vh, 42px);
 }
 
-#clock {
-    font-size: 0.85rem;
-    font-weight: 500;
-    letter-spacing: 0.1em;
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
+.hero { display: flex; flex-direction: column; gap: 18px; max-width: 760px; }
+.kicker { display: inline-flex; align-items: center; gap: 12px; }
+.kicker::before { content: ''; width: 28px; height: 1px; background: var(--accent); }
+
+h1 {
+  font-family: var(--cond);
+  font-size: clamp(3.2rem, 6.6vw, 6rem);
+  font-weight: 900; line-height: 0.84; letter-spacing: -0.01em;
+  text-transform: uppercase;
 }
+h1 .line { display: block; overflow: hidden; padding-bottom: .04em; }
+h1 .line > span { display: block; animation: rise 1s var(--ease) both; }
+h1 .line:nth-child(2) > span { animation-delay: .08s; color: transparent; -webkit-text-stroke: 1.5px var(--white); }
 
-#scope {
-    display: block;
-    width: 120px;
-    height: 28px;
-    min-width: 84px;
-    flex: 0 1 120px;
-}
+.lede { font-size: clamp(1rem, 1.3vw, 1.12rem); line-height: 1.6; color: var(--off); max-width: 540px; }
+.traits { display: flex; flex-wrap: wrap; gap: 8px 22px; }
+.traits span { display: inline-flex; align-items: center; gap: 9px; }
+.traits span::before { content: ''; width: 5px; height: 5px; border-radius: 50%; border: 1px solid var(--accent); }
 
-.head-ctl {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    min-width: 0;
-    justify-self: stretch;
-    justify-content: space-between;
-}
+.fade { animation: fadeUp .9s var(--ease) both; }
+.d1 { animation-delay: .16s; } .d2 { animation-delay: .24s; }
+.d3 { animation-delay: .32s; } .d4 { animation-delay: .42s; }
 
-.head-vents { height: 22px; }
-
-.lamp { display: flex; align-items: center; gap: 7px; }
-
-.phos-sw { display: flex; align-items: center; gap: 8px; }
-
-@media (min-width: 520px) {
-    .head-row { grid-template-columns: 1fr auto; }
-    .brand    { grid-area: 1 / 1; }
-    .head-ctl { grid-area: 1 / 2; justify-self: end; justify-content: flex-end; }
-    .head-well{ grid-area: 2 / 1 / 3 / 3; }
-}
-
-@media (min-width: 860px) {
-    .head-row { grid-template-columns: auto minmax(210px, 1fr) auto; }
-    .brand    { grid-area: 1 / 1; }
-    .head-well{ grid-area: 1 / 2; }
-    .head-ctl { grid-area: 1 / 3; }
-}
-
-/* ── 2. TOOL LIST ────────────────────────────────────────────────────────── */
-
-.tools { display: grid; grid-template-columns: 1fr; gap: 12px; }
-@media (min-width: 760px) { .tools { grid-template-columns: 1fr 1fr; } }
+/* ── start cards ───────────────────────────────────────────────────────── */
+.tools { display: grid; grid-template-columns: 1.15fr 1fr; gap: clamp(14px, 2vw, 24px); }
 
 .tool {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 14px;
-    padding: 20px 22px 18px;
-    text-decoration: none;
-    color: var(--ink);
-    /* Flat hover: the rule brightens and a colour bar appears on the leading
-       edge. Nothing lifts — there is no light source in a drawing. */
-    border-left: 3px solid transparent;
-    transition: border-color var(--snap), background var(--snap);
+  --mx: 50%; --my: 50%;
+  position: relative; isolation: isolate;
+  display: flex; flex-direction: column; gap: 18px;
+  padding: clamp(22px, 2.2vw, 30px);
+  border: 1px solid var(--rule);
+  background: rgba(6,7,11,0.9);
+  transition: border-color .3s, transform .5s var(--ease), background-color .3s;
 }
-
-.tool:hover,
-.tool:focus-visible {
-    background: var(--ground-2);
-    border-color: var(--rule-hi);
-    border-left-color: var(--accent);
+.tool::before {
+  content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(420px circle at var(--mx) var(--my), rgba(143,180,255,0.08), transparent 60%);
+  opacity: 0; transition: opacity .4s;
 }
+.tool:hover, .tool:focus-within, .tool.hot {
+  border-color: var(--rule-hi); transform: translateY(-3px); background-color: rgba(10,12,18,0.94);
+}
+.tool:hover::before, .tool:focus-within::before, .tool.hot::before { opacity: 1; }
 
-.tool:focus-visible { outline: 2px solid var(--s6); outline-offset: 2px; }
+.corner { position: absolute; width: 0; height: 0; border-color: var(--accent); border-style: solid; opacity: 0;
+  transition: width .45s var(--ease), height .45s var(--ease), opacity .2s; pointer-events: none; }
+.corner.tl { top: -1px; left: -1px; border-width: 1px 0 0 1px; }
+.corner.tr { top: -1px; right: -1px; border-width: 1px 1px 0 0; }
+.corner.bl { bottom: -1px; left: -1px; border-width: 0 0 1px 1px; }
+.corner.br { bottom: -1px; right: -1px; border-width: 0 1px 1px 0; }
+.tool:hover .corner, .tool:focus-within .corner, .tool.hot .corner { width: 16px; height: 16px; opacity: 1; }
 
-/* A plotted index numeral, not a badge */
+.tool-top { display: flex; align-items: center; justify-content: space-between; }
 .tool-index {
-    position: absolute;
-    top: 14px;
-    right: 18px;
-    font-family: var(--f-display);
-    font-size: 2.6rem;
-    font-weight: 700;
-    line-height: 1;
-    color: var(--rule-hi);
-    transition: color var(--snap);
+  font-family: var(--cond); font-weight: 700; font-size: 0.82rem; letter-spacing: 0.24em;
+  color: var(--dim); text-transform: uppercase; transition: color .3s;
 }
-.tool:hover .tool-index,
-.tool:focus-visible .tool-index { color: var(--accent); }
-
-.tool-body { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
-
+.tool:hover .tool-index, .tool:focus-within .tool-index, .tool.hot .tool-index { color: var(--accent); }
+.status { display: inline-flex; align-items: center; gap: 9px; }
+.status i { position: relative; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+.status i::after {
+  content: ''; position: absolute; inset: -4px; border-radius: 50%; border: 1px solid var(--accent);
+  opacity: 0; animation: ping 2.8s ease-out 1.2s 3;
+}
 .tool-name {
-    font-size: clamp(1.05rem, 2.2vw, 1.4rem);
-    line-height: 1.05;
+  font-family: var(--cond); font-weight: 700; text-transform: uppercase;
+  font-size: clamp(1.8rem, 2.6vw, 2.4rem); line-height: 0.9; letter-spacing: 0.01em;
 }
 
-.tool-spec {
-    letter-spacing: 0.1em;
-    line-height: 1.6;
-    overflow-wrap: anywhere;
+/* rows inside a card: recent files, and the ways to start */
+.rows { display: flex; flex-direction: column; border-top: 1px solid var(--rule); }
+.row {
+  position: relative; display: grid; grid-template-columns: 30px 1fr auto; align-items: center; gap: 12px;
+  width: 100%; padding: 10px 4px; text-align: left; border-bottom: 1px solid var(--rule);
+  transition: background-color .25s, padding .35s var(--ease);
 }
-
-.tool-body { flex: 1 1 auto; }
-
-/* Overview, kept short — and embossed underneath in real Grade 1 braille
-   purely as flavour, which is why the cells are aria-hidden. */
-.tool-list {
-    list-style: none;
-    margin: 4px 0 0;
-    padding: 12px 0 0;
-    border-top: 1px solid var(--rule);
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    font-size: 0.72rem;
-    line-height: 1.35;
-    color: var(--ink-soft);
-}
-.tool-list li { position: relative; padding-left: 15px; }
-.tool-list li::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0.5em;
-    width: 7px;
-    height: 1px;
-    background: var(--phos-dim);
-}
-.braille {
-    display: block;
-    margin-top: 1px;
-    font-family: 'Segoe UI Symbol', 'Apple Symbols', 'Noto Sans Symbols 2', sans-serif;
-    font-size: 0.78rem;
-    line-height: 1;
-    letter-spacing: 0.02em;
-    color: var(--rule-hi);
-}
-.tool:hover .braille,
-.tool:focus-visible .braille { color: var(--phos-dim); }
+.row:hover, .row:focus-visible { background: rgba(143,180,255,0.05); padding-left: 10px; outline: none; }
+.row .ri svg { width: 15px; height: 15px; }
+.row .fd { width: 30px; display: grid; place-items: center; }
+.row .fd .dot { width: 9px; height: 9px; transition: transform .35s var(--spring, cubic-bezier(.34,1.45,.64,1)); }
+.row:hover .fd .dot, .row:focus-visible .fd .dot { transform: scale(1.35); }
+.row .ri { width: 30px; height: 30px; display: grid; place-items: center; border: 1px solid var(--rule); color: var(--off);
+  font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0; transition: border-color .25s, color .25s; }
+.row:hover .ri, .row:focus-visible .ri { border-color: var(--accent); color: var(--accent); }
+.row .rt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.row .rn { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .rm { font-size: 0.82rem; color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .arw { color: var(--dim); transition: transform .4s var(--ease), color .25s; }
+.row:hover .arw, .row:focus-visible .arw { transform: translateX(4px); color: var(--accent); }
+#cardNew .rows { flex: 1; }
+#cardNew .row { flex: 1; }
+.empty { flex: 1; display: grid; place-items: center; text-align: center; min-height: 140px; padding: 20px 24px; margin-top: 4px;
+  color: var(--off); line-height: 1.6; border: 1px dashed var(--rule); }
+#cardRecent .rows:has(.empty) { border-top: 0; flex: 1; display: flex; }
+.drop-on #cardNew { border-color: var(--accent); }
+.drop-on #cardNew .corner { width: 16px; height: 16px; opacity: 1; }
 
 .tool-foot {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding-top: 14px;
-    border-top: 1px solid var(--rule);
+  margin-top: auto; height: 52px; border-top: 1px solid var(--rule);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+/* both cards end on the same rule: the footer line, pinned to the bottom */
+.rows .row:last-child { border-bottom: 0; }
+#cardRecent .rows, #cardNew .rows { margin-bottom: 0; }
+.go {
+  display: inline-flex; align-items: center; gap: 12px;
+  font-family: var(--cond); font-weight: 700; font-size: 0.9rem; letter-spacing: 0.2em; text-transform: uppercase;
+}
+.go .arw { display: inline-block; transition: transform .45s var(--ease); }
+.go:hover .arw, .go:focus-visible .arw { transform: translateX(6px); }
+.go:hover { color: var(--accent); }
+
+.home {
+  position: relative; display: inline-flex; align-items: center; gap: 10px;
+  padding: 8px 14px; margin: -8px -14px; text-decoration: none;
+}
+.home .arw { transition: transform .35s var(--ease); }
+.home:hover, .home:focus-visible { color: var(--white); outline: none; }
+.home:hover .arw, .home:focus-visible .arw { transform: translateX(-4px); }
+.home::before, .home::after {
+  content: ''; position: absolute; width: 9px; height: 9px; border-color: var(--accent); border-style: solid;
+  opacity: 0; transition: opacity .2s;
+}
+.home::before { top: 0; left: 0; border-width: 1px 0 0 1px; }
+.home::after { bottom: 0; right: 0; border-width: 0 1px 1px 0; }
+.home:hover::before, .home:hover::after, .home:focus-visible::before, .home:focus-visible::after { opacity: 1; }
+
+/* leaving the start screen: the lens swallows the sky, then black */
+.veil {
+  position: fixed; inset: 0; z-index: 60; pointer-events: none; background: var(--bg);
+  opacity: 0; transition: opacity .34s ease;
+}
+html.leaving .veil { opacity: 1; transition-delay: .26s; }
+html.leaving #start main, html.leaving #start .bar { transition: transform .6s var(--ease), opacity .4s ease .08s; transform: scale(.985); opacity: 0; }
+
+@media (max-width: 860px) {
+  .tools { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  :root { --bar-h: 50px; }
+  .brand { font-size: 1rem; }
+  .micro { font-size: 0.66rem; letter-spacing: 0.16em; }
+  .hide-sm { display: none; }
+  #start main { justify-content: flex-start; padding-top: 34px; }
+  .bar-bot { flex-wrap: wrap; padding-top: 12px; padding-bottom: 12px; row-gap: 8px; }
+}
+@media (max-height: 880px) and (min-width: 861px) {
+  #start main { padding-top: 26px; padding-bottom: 26px; gap: 26px; }
+  .hero { gap: 14px; }
+  h1 { font-size: clamp(2.8rem, 5.2vw, 4.4rem); }
+  .tool { gap: 12px; padding: 18px 24px; }
+  .row { padding-top: 7px; padding-bottom: 7px; }
 }
 
-/* The OPEN control is decorative — it reacts to the row, never takes focus. */
-.tool .key { pointer-events: none; }
-.tool:hover .key,
-.tool:focus-visible .key {
-    color: #0a0b0d;
-    background: var(--accent);
-    border-color: var(--accent);
+/* ══════════════════════════════════════════════════════════ EDITOR ════ */
+
+.ed {
+  position: fixed; left: 0; right: 0; top: 0; z-index: 20;
+  height: 100vh; height: 100dvh;
+  display: grid; grid-template-rows: auto 1fr auto auto; grid-template-columns: minmax(0, 1fr);
+  background: var(--bg);
+}
+.ed.in { animation: edIn .5s var(--ease) both; }
+.ed.out { animation: fadeOut .22s ease both; }
+
+/* top bar */
+.ed-bar {
+  position: relative; display: flex; align-items: stretch; gap: 0; height: 48px;
+  border-bottom: 1px solid var(--rule); background: var(--bg);
+  padding-top: env(safe-area-inset-top);
+  box-sizing: content-box;
+}
+.ed-brand {
+  display: inline-flex; align-items: center; gap: 10px; padding: 0 16px 0 14px; flex: none;
+  border-right: 1px solid var(--rule);
+  font-family: var(--cond); font-weight: 900; font-size: 0.95rem; letter-spacing: 0.22em; text-transform: uppercase;
+  transition: color .2s, background-color .2s;
+}
+.ed-brand .mk { position: relative; width: 14px; height: 14px; border-radius: 50%; box-shadow: inset 0 0 0 1px var(--accent); transition: transform .5s var(--ease); }
+.ed-brand .mk::after { content: ''; position: absolute; inset: 4px; border-radius: 50%; background: var(--white); transition: inset .4s var(--ease); }
+.ed-brand b { font-weight: 400; color: var(--dim); letter-spacing: 0.2em; }
+.ed-brand:hover { color: var(--accent); }
+.ed-brand:hover .mk { transform: scale(1.15); }
+.ed-brand:hover .mk::after { inset: 5px; }
+
+.tabs { display: flex; align-items: stretch; min-width: 0; overflow-x: auto; scrollbar-width: none; flex: 0 1 auto; }
+.ed-bar { min-width: 0; overflow: hidden; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  position: relative; display: inline-flex; align-items: center; gap: 8px; flex: none;
+  padding: 0 10px 0 16px; max-width: 220px; color: var(--dim); white-space: nowrap;
+  border-right: 1px solid var(--rule); font-size: 0.9rem;
+  transition: color .2s, background-color .2s, padding .25s var(--ease);
+}
+.tab.new { animation: tabIn .35s var(--ease) both; }
+.tab:hover { color: var(--off); background: rgba(255,255,255,0.02); }
+.tab .tn { overflow: hidden; text-overflow: ellipsis; }
+/* one marker for a file's language, used on tabs, the start screen and the phone file list */
+.dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; flex: none; background: var(--faint); }
+.dot.html { background: #8fb4ff; } .dot.css { background: #c3a8ff; } .dot.js { background: #ffd58f; }
+.dot.json { background: #9fe3c6; } .dot.md { background: #d0d0cc; } .dot.xml { background: #ffb38f; }
+.tab { padding-right: 16px; }
+.tab .x { width: 0; height: 22px; margin-left: -8px; display: grid; place-items: center; overflow: hidden; border-radius: 3px; opacity: 0; color: var(--dim);
+  transition: width .2s var(--ease), margin .2s var(--ease), opacity .15s, background-color .15s, color .15s; }
+.tab:hover, .tab.on, .tab:focus-within { padding-right: 10px; }
+.tab .x svg { width: 12px; height: 12px; }
+.tab:hover .x, .tab.on .x, .tab:focus-within .x { opacity: 1; width: 22px; margin-left: 0; }
+.tab .x:hover { background: rgba(255,255,255,0.08); color: var(--white); }
+.tab.on { color: var(--white); background: var(--bg-2); }
+.tab.on::after { content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--accent); animation: draw .4s var(--ease) both; }
+
+.ib {
+  width: 48px; flex: none; display: grid; place-items: center; color: var(--dim);
+  border-right: 1px solid var(--rule); transition: color .2s, background-color .2s;
+}
+.ib:hover { color: var(--white); background: rgba(255,255,255,0.03); }
+.ib:active svg { transform: scale(.88); }
+.ib svg { transition: transform .15s; }
+
+.filebtn {
+  display: none; align-items: center; gap: 8px; min-width: 0; flex: 1 1 auto; padding: 0 14px;
+  font-size: 0.95rem; text-align: left;
+}
+.filebtn .tn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.filebtn svg { width: 12px; height: 12px; color: var(--dim); }
+
+.ed-actions { margin-left: auto; display: flex; align-items: center; gap: 6px; padding: 0 10px; flex: none; }
+.tb {
+  height: 32px; display: inline-flex; align-items: center; gap: 8px; padding: 0 12px;
+  border: 1px solid var(--rule); color: var(--off);
+  font-family: var(--cond); font-weight: 600; font-size: 0.8rem; letter-spacing: 0.16em; text-transform: uppercase;
+  transition: border-color .2s, color .2s, background-color .2s, transform .15s;
+}
+.tb:hover { border-color: var(--rule-hi); color: var(--white); }
+.tb:active { transform: scale(.97); }
+.tb.ico { width: 32px; padding: 0; justify-content: center; }
+.tb[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); background: rgba(143,180,255,0.07); }
+.tb.busy svg { animation: spin .8s linear infinite; }
+
+/* code + preview */
+.ed-main { position: relative; display: grid; grid-template-columns: 1fr; min-height: 0; }
+.ed-main.split { grid-template-columns: minmax(0, 1fr) 1px var(--prev-w, 46%); }
+.ed-code { position: relative; min-width: 0; min-height: 0; background: var(--bg-2); }
+.ed-code .CodeMirror, .ed-code > textarea { position: absolute; inset: 0; height: auto; }
+.ed-code > textarea {
+  width: 100%; height: 100%; resize: none; border: 0; outline: 0; padding: 12px 16px;
+  background: transparent; color: var(--white); font: 13.5px/1.65 var(--mono); tab-size: 2; white-space: pre;
+}
+/* a header row over the code that lines up with the preview's */
+.code-head { position: absolute; top: 0; left: 0; right: 0; z-index: 3; height: 36px; display: flex; align-items: center; gap: 9px;
+  padding: 0 14px; border-bottom: 1px solid var(--rule); background: var(--bg-2); }
+.code-head .micro { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.code-head #headLinks { margin-left: auto; color: var(--faint); }
+.ed-code .CodeMirror, .ed-code > textarea { top: 36px; }
+.ed-loading { position: absolute; inset: 0; display: grid; place-items: center; z-index: 2; background: var(--bg-2); }
+.ed-loading span { display: inline-flex; align-items: center; gap: 12px; }
+.ed-loading span::before { content: ''; width: 14px; height: 14px; border-radius: 50%; border: 1px solid var(--rule-hi); border-top-color: var(--accent); animation: spin .8s linear infinite; }
+
+.ed-split { position: relative; background: var(--rule); cursor: col-resize; display: none; }
+.ed-main.split .ed-split { display: block; }
+.ed-split::before { content: ''; position: absolute; top: 0; bottom: 0; left: -5px; right: -5px; }
+.ed-split:hover, .ed-split.drag { background: var(--accent); }
+
+.ed-prev { display: none; flex-direction: column; min-width: 0; min-height: 0; background: var(--bg); }
+.ed-main.split .ed-prev { display: flex; animation: prevIn .45s var(--ease) both; }
+.prev-head { height: 36px; flex: none; display: flex; align-items: center; gap: 6px; padding: 0 6px 0 14px; border-bottom: 1px solid var(--rule); }
+.prev-head .micro { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.prev-head .tb { height: 26px; }
+.prev-head .tb.ico { width: 26px; }
+.frame { position: relative; flex: 1; min-height: 0; background: #fff; }
+.frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #fff; }
+.frame.flash::after { content: ''; position: absolute; inset: 0; pointer-events: none; box-shadow: inset 0 0 0 2px var(--accent); animation: fadeOut .6s ease both; }
+.ed-main.dragging iframe { pointer-events: none; }
+
+/* coding key row — on touch screens, docked above the keyboard */
+.keyrow {
+  display: none; align-items: center; gap: 6px; height: 46px; padding: 0 8px;
+  border-top: 1px solid var(--rule); background: var(--bg);
+  overflow-x: auto; scrollbar-width: none; scroll-snap-type: x proximity;
+}
+.keyrow::-webkit-scrollbar { display: none; }
+.key {
+  flex: none; height: 32px; min-width: 38px; padding: 0 10px; display: inline-grid; place-items: center;
+  border: 1px solid var(--rule); color: var(--off); font: 500 0.88rem var(--mono); scroll-snap-align: start;
+  transition: background-color .12s, border-color .12s, color .12s, transform .1s;
+}
+.key:active { background: rgba(143,180,255,0.14); border-color: var(--accent); color: var(--white); transform: scale(.94); }
+.key.wide { font-family: var(--cond); font-weight: 600; font-size: 0.78rem; letter-spacing: 0.14em; text-transform: uppercase; }
+.key svg { width: 15px; height: 15px; }
+.keysep { flex: none; width: 1px; height: 22px; background: var(--rule); margin: 0 4px; }
+@media (pointer: coarse) { .keyrow { display: flex; } }
+
+/* status bar */
+.ed-status {
+  display: flex; align-items: center; gap: 18px; height: 28px; padding: 0 14px;
+  padding-bottom: env(safe-area-inset-bottom); box-sizing: content-box;
+  border-top: 1px solid var(--rule); background: var(--bg);
+}
+.ed-status .micro { white-space: nowrap; }
+.ed-status .grow { flex: 1; }
+.save { display: inline-flex; align-items: center; gap: 8px; }
+.save i { width: 6px; height: 6px; border-radius: 50%; background: var(--faint); transition: background-color .3s; }
+.save.ok i { background: var(--accent); }
+.save.pulse i { animation: pulse .6s ease; }
+.save.bad i { background: var(--bad); }
+.save.bad { color: var(--bad); }
+
+/* CodeMirror, in the house colours */
+.CodeMirror { font: 13.5px/1.65 var(--mono); background: transparent; color: #e6e6e1; }
+@media (pointer: coarse) { .CodeMirror, .ed-code > textarea { font-size: 16px; } }
+.CodeMirror-lines { padding: 12px 0; }
+.CodeMirror pre.CodeMirror-line, .CodeMirror pre.CodeMirror-line-like { padding: 0 16px; }
+.CodeMirror-gutters { background: var(--bg-2); border-right: 1px solid var(--rule); }
+.CodeMirror-linenumber { color: var(--faint); padding: 0 12px 0 14px; min-width: 22px; }
+.CodeMirror-activeline-background { background: rgba(255,255,255,0.025); }
+.CodeMirror-activeline .CodeMirror-gutter-elt { color: var(--off); }
+.CodeMirror-cursor { border-left: 2px solid var(--accent); }
+.CodeMirror-selected { background: rgba(143,180,255,0.16) !important; }
+.CodeMirror-focused .CodeMirror-selected { background: rgba(143,180,255,0.24) !important; }
+.CodeMirror-matchingbracket { color: var(--white) !important; box-shadow: inset 0 -1px 0 var(--accent); }
+.CodeMirror-matchingtag { background: rgba(143,180,255,0.12); }
+.CodeMirror-foldgutter { width: 12px; }
+.CodeMirror-foldgutter-open, .CodeMirror-foldgutter-folded { color: var(--faint); cursor: pointer; }
+.CodeMirror-foldgutter-open:after { content: '\25BE'; } .CodeMirror-foldgutter-folded:after { content: '\25B8'; }
+.CodeMirror-foldmarker { color: var(--accent); text-shadow: none; font-family: inherit; }
+.cm-s-space .cm-tag, .cm-s-space .cm-keyword { color: #8fb4ff; }
+.cm-s-space .cm-attribute, .cm-s-space .cm-property { color: #a9a3c9; }
+.cm-s-space .cm-string, .cm-s-space .cm-string-2 { color: #9fe3c6; }
+.cm-s-space .cm-number, .cm-s-space .cm-atom { color: #ffd58f; }
+.cm-s-space .cm-def, .cm-s-space .cm-variable-2, .cm-s-space .cm-qualifier { color: #c3a8ff; }
+.cm-s-space .cm-variable, .cm-s-space .cm-variable-3, .cm-s-space .cm-type { color: #e6e6e1; }
+.cm-s-space .cm-builtin { color: #ffb38f; }
+.cm-s-space .cm-comment { color: #6b6f7c; font-style: italic; }
+.cm-s-space .cm-meta, .cm-s-space .cm-bracket, .cm-s-space .cm-operator { color: var(--dim); }
+.cm-s-space .cm-error { color: var(--bad); }
+.CodeMirror-dialog { background: var(--bg-3); color: var(--off); border-bottom: 1px solid var(--rule) !important; padding: 8px 14px; font: 0.88rem 'Barlow', sans-serif; z-index: 15; animation: dlgDown .3s var(--ease) both; }
+.CodeMirror-dialog input { font: 13px var(--mono); color: var(--white); background: var(--bg); border: 1px solid var(--rule-hi); padding: 4px 8px; width: 16em; margin: 0 6px; }
+.CodeMirror-dialog input:focus { border-color: var(--accent); outline: none; }
+.CodeMirror-dialog button { font: 600 0.75rem var(--cond); letter-spacing: 0.14em; text-transform: uppercase; border: 1px solid var(--rule-hi); padding: 4px 10px; margin-left: 4px; color: var(--white); }
+.CodeMirror-search-hint { color: var(--dim); }
+.cm-searching { background: rgba(255,213,143,0.22); }
+.CodeMirror-hints { background: var(--bg-3); border: 1px solid var(--rule-hi); box-shadow: 0 18px 40px rgba(0,0,0,.5); font: 13px var(--mono); padding: 4px; z-index: 40; animation: fadeIn .15s ease both; }
+.CodeMirror-hint { color: var(--off); padding: 3px 8px; }
+li.CodeMirror-hint-active { background: rgba(143,180,255,0.18); color: var(--white); }
+
+/* ── popover menu and dialogs (custom elements, see script) ───────────── */
+ed-menu {
+  position: fixed; z-index: 70; min-width: 264px; max-height: 70vh; overflow-y: auto; padding: 6px;
+  display: block; background: var(--bg-3); border: 1px solid var(--rule-hi);
+  box-shadow: 0 24px 60px rgba(0,0,0,.6);
+  transform-origin: top right; animation: popIn .22s var(--ease) both;
+}
+ed-menu.up { transform-origin: bottom right; }
+ed-menu .mi {
+  position: relative; width: 100%; display: flex; align-items: center; gap: 12px; padding: 9px 10px; text-align: left; color: var(--off); font-size: 0.93rem;
+  transition: background-color .12s, color .12s;
+}
+ed-menu .mi:hover, ed-menu .mi:focus-visible { background: rgba(143,180,255,0.09); color: var(--white); outline: none; }
+ed-menu .mi .dw { width: 16px; display: grid; place-items: center; flex: none; }
+ed-menu .mi .k { margin-left: auto; padding-left: 24px; white-space: nowrap; font: 0.74rem var(--mono); color: var(--faint); }
+ed-menu .mi .chk { margin-left: auto; width: 14px; height: 14px; border: 1px solid var(--rule-hi); display: grid; place-items: center; }
+ed-menu .mi .chk.on { border-color: var(--accent); background: var(--accent); color: var(--bg); }
+ed-menu .mi .chk svg { width: 10px; height: 10px; stroke-width: 2.4; }
+ed-menu .mi.on { color: var(--white); }
+ed-menu .mi.on::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--accent); }
+ed-menu .mi.danger:hover { color: var(--bad); }
+ed-menu .sep { height: 1px; background: var(--rule); margin: 6px 4px; }
+ed-menu .lab { padding: 8px 10px 4px; }
+
+ed-dialog { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 16px; background: rgba(3,4,7,0.66); animation: fadeIn .2s ease both; }
+ed-dialog.out { animation: fadeOut .18s ease both; }
+ed-dialog .box {
+  position: relative; width: min(420px, 100%); background: var(--bg-2); border: 1px solid var(--rule-hi);
+  box-shadow: 0 30px 90px rgba(0,0,0,.6); animation: dlgIn .35s var(--ease) both;
+}
+ed-dialog.out .box { animation: dlgOut .18s ease both; }
+ed-dialog .box::before, ed-dialog .box::after { content: ''; position: absolute; width: 14px; height: 14px; border-color: var(--accent); border-style: solid; }
+ed-dialog .box::before { top: -1px; left: -1px; border-width: 1px 0 0 1px; }
+ed-dialog .box::after { bottom: -1px; right: -1px; border-width: 0 1px 1px 0; }
+ed-dialog header { padding: 18px 20px 6px; }
+ed-dialog h2 { font: 700 1.5rem/1 var(--cond); letter-spacing: 0.02em; text-transform: uppercase; }
+ed-dialog .body { padding: 10px 20px 18px; display: flex; flex-direction: column; gap: 14px; color: var(--off); line-height: 1.55; }
+ed-dialog label.fld { display: flex; flex-direction: column; gap: 7px; }
+ed-dialog input[type=text] {
+  height: 40px; padding: 0 12px; background: var(--bg); border: 1px solid var(--rule-hi); color: var(--white);
+  font: 14px var(--mono); outline: none; transition: border-color .2s, box-shadow .2s;
+}
+ed-dialog input[type=text]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(143,180,255,0.12); }
+ed-dialog .err { color: var(--bad); font-size: 0.85rem; }
+ed-dialog .err:empty { display: none; }
+ed-dialog footer { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 20px 18px; border-top: 1px solid var(--rule); }
+ed-dialog .tb.primary { background: var(--white); color: var(--bg); border-color: var(--white); }
+ed-dialog .tb.primary:hover { background: var(--accent); border-color: var(--accent); }
+ed-dialog .tb.danger { border-color: var(--bad); color: var(--bad); }
+ed-dialog .tb.danger:hover { background: var(--bad); color: var(--bg); }
+.pills { display: flex; gap: 6px; flex-wrap: wrap; }
+.pill { height: 32px; padding: 0 12px; border: 1px solid var(--rule); color: var(--off); font-size: 0.88rem; transition: border-color .15s, color .15s, background-color .15s; }
+.pill:hover { border-color: var(--rule-hi); color: var(--white); }
+.pill[aria-checked="true"] { border-color: var(--accent); color: var(--white); background: rgba(143,180,255,0.08); }
+.keys { display: grid; grid-template-columns: auto 1fr; gap: 6px 18px; font-size: 0.9rem; }
+.keys kbd { font: 0.78rem var(--mono); color: var(--white); border: 1px solid var(--rule-hi); padding: 1px 6px; white-space: nowrap; justify-self: start; }
+
+.toasts { position: fixed; left: 50%; bottom: calc(76px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 90; display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; }
+.toast {
+  display: inline-flex; align-items: center; gap: 10px; padding: 9px 16px; background: var(--bg-3); border: 1px solid var(--rule-hi);
+  font-family: var(--cond); font-weight: 600; font-size: 0.8rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--white);
+  box-shadow: 0 14px 34px rgba(0,0,0,.5); animation: toastIn .4s var(--ease) both;
+}
+.toast::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+.toast.bad::before { background: var(--bad); }
+.toast.out { animation: fadeOut .25s ease both; }
+
+/* mid widths: the toolbar keeps its icons and drops its words */
+@media (max-width: 1100px) {
+  .tb .lbl { display: none; }
+  .tb { width: 32px; padding: 0; justify-content: center; }
 }
 
-/* ── PLOT PANEL ──────────────────────────────────────────────────────────
-   The element that makes the page fill its viewport instead of floating in
-   a void: it takes every pixel the header, cards and footer leave behind. */
-
-.plot {
-    flex: 1 1 auto;
-    min-height: 190px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: clamp(24px, 5vw, 64px);
-    padding: 20px 24px;
-    overflow: hidden;
+/* ── narrow screens: one file at a time, preview takes the screen ─────── */
+@media (max-width: 760px) {
+  .ed-brand { padding: 0 14px; }
+  .ed-brand span, .ed-brand b { display: none; }
+  .tabs, #newBtn, .tb .lbl, #findBtn { display: none; }
+  .filebtn { display: inline-flex; }
+  .ed-actions { gap: 4px; padding: 0 8px; }
+  .tb { padding: 0; width: 34px; justify-content: center; }
+  .code-head { display: none; }
+  .ed-code .CodeMirror, .ed-code > textarea { top: 0; }
+  .ed-main.split { grid-template-columns: 1fr; }
+  .ed-main.split .ed-split { display: none; }
+  .ed-main.split .ed-prev {
+    position: fixed; inset: 0; z-index: 30; padding-top: env(safe-area-inset-top);
+    animation: sheetUp .4s var(--ease) both;
+  }
+  .prev-head { height: 48px; }
+  .prev-head .tb { height: 34px; }
+  .prev-head .tb.ico { width: 34px; }
+  .ed-status { gap: 12px; }
+  .hide-narrow { display: none; }
 }
 
-/* The globe grows into whatever height the panel was given, so the space is
-   occupied by the drawing rather than left as void. */
-.globe {
-    display: block;
-    flex: 0 0 auto;
-    height: min(100%, 340px);
-    width: auto;
-    aspect-ratio: 1 / 1;
+/* touch: every control at least 44px, the key row a little taller */
+@media (pointer: coarse) {
+  .ed-bar { height: 52px; }
+  .ed-brand { padding: 0 16px; }
+  .ib { width: 52px; }
+  .ed-actions { gap: 2px; padding: 0 4px; }
+  .ed-actions .tb, .ed-actions .tb.ico { width: 44px; height: 44px; padding: 0; justify-content: center; border-color: transparent; }
+  .ed-actions .tb .lbl { display: none; }
+  .ed-actions .tb[aria-pressed="true"] { border-color: var(--accent); }
+  .prev-head { height: 52px; }
+  .prev-head .tb, .prev-head .tb.ico { width: 44px; height: 44px; }
+  .keyrow { height: 58px; gap: 6px; }
+  .key { height: 44px; min-width: 44px; }
+  ed-menu .mi { padding: 12px 12px; }
+  ed-dialog .tb { height: 44px; padding: 0 16px; }
+  .pill { height: 44px; padding: 0 16px; }
 }
 
-.plot-read {
-    display: flex;
-    flex-direction: column;
-    gap: 9px;
-    min-width: 0;
-    flex: 0 1 420px;   /* sits beside the globe, not stranded across the panel */
-}
-.plot-row {
-    display: grid;
-    grid-template-columns: 84px 1fr;
-    gap: 14px;
-    align-items: baseline;
-    font-size: 0.72rem;
-    letter-spacing: 0.08em;
-    padding-bottom: 8px;
-    border-bottom: 1px solid var(--rule-lo);
-}
-.plot-row:last-child { border-bottom: 0; padding-bottom: 0; }
+@keyframes fadeUp  { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+@keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+@keyframes rise    { from { transform: translateY(105%); } to { transform: none; } }
+@keyframes draw    { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes ping    { 0% { opacity: .7; transform: scale(.4); } 70%, 100% { opacity: 0; transform: scale(1.6); } }
+@keyframes edIn    { from { opacity: 0; transform: scale(1.012); } to { opacity: 1; transform: none; } }
+@keyframes tabIn   { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+@keyframes prevIn  { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: none; } }
+@keyframes sheetUp { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes popIn   { from { opacity: 0; transform: translateY(-4px) scale(.97); } to { opacity: 1; transform: none; } }
+@keyframes dlgIn   { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: none; } }
+@keyframes dlgOut  { to { opacity: 0; transform: translateY(6px) scale(.98); } }
+@keyframes dlgDown { from { opacity: 0; transform: translateY(-100%); } to { opacity: 1; transform: none; } }
+@keyframes toastIn { from { opacity: 0; transform: translateY(12px) scale(.95); } to { opacity: 1; transform: none; } }
+@keyframes pulse   { 0% { transform: scale(1); } 40% { transform: scale(1.9); } 100% { transform: scale(1); } }
+@keyframes spin    { to { transform: rotate(360deg); } }
 
-@media (max-width: 620px) {
-    .plot { flex-direction: column; align-items: stretch; gap: 16px; }
-    .globe { align-self: center; width: 150px; height: 150px; }
-    .plot-row { grid-template-columns: 72px 1fr; font-size: 0.66rem; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition-duration: .01s !important; }
 }
-
-/* ── 3. FOOTER ───────────────────────────────────────────────────────────── */
-
-.page-foot {
-    padding: 14px 20px;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 12px 18px;
-}
-
-/* The identity mark: six flat bands under the wordmark. */
-.brand-stripe { height: 5px; width: 100%; max-width: 210px; }
-.brand-stripe i { width: auto; flex: 1 1 0; min-height: 5px; }
-
-.foot-meter { display: flex; align-items: center; gap: 9px; }
-.foot-right {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 10px 18px;
-    margin-left: auto;
-}
+/* screenshot harness hook: settle everything at its end state */
+html.still *, html.still *::before, html.still *::after { animation: none !important; transition: none !important; }
 </style>
 </head>
-<body>
+<body data-view="start">
 
-<main class="page">
+<space-field aria-hidden="true"></space-field>
 
-    <!-- ── HEADER ──────────────────────────────────────────────────────── -->
-    <header class="chassis page-head">
-
-        <div class="head-row">
-
-            <div class="brand">
-                <h1 class="designation">CODING TOOLS</h1>
-                <span class="stripe brand-stripe" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
-                <span class="label">CODE.ISAIART.COM</span>
-            </div>
-
-            <div class="bezel head-well">
-                <div class="screen" id="headScreen">
-                    <div class="well-row">
-                        <span class="phos" id="clock" role="timer" aria-label="System clock">--:--:--</span>
-                        <canvas id="scope" width="120" height="28" aria-hidden="true"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <div class="head-ctl">
-
-                <div class="lamp">
-                    <span class="led on green" aria-hidden="true"></span>
-                    <span class="label">PWR</span>
-                </div>
-
-                <div class="phos-sw">
-                    <span class="label">DARK</span>
-                    <label class="rocker">
-                        <input type="checkbox" id="phosSw" aria-label="Light mode">
-                        <span class="rock"></span>
-                    </label>
-                    <span class="label">LIGHT</span>
-                </div>
-            </div>
-
-        </div>
-    </header>
-
-    <!-- ── TOOLS ───────────────────────────────────────────────────────── -->
-    <div class="tools">
-
-        <a class="tool chassis" href="editor/">
-            <span class="tool-index" aria-hidden="true">01</span>
-            <div class="tool-body">
-                <span class="designation tool-name">CODE EDITOR</span>
-                <span class="label tool-spec">MULTI-FILE TABS / LIVE PREVIEW / FORMATTING / SEARCH</span>
-                <ul class="tool-list">
-                    <li data-braille>Write and see it at once</li>
-                    <li data-braille>Tidies up what you type</li>
-                    <li data-braille>Nothing leaves the browser</li>
-                </ul>
-            </div>
-            <div class="tool-foot">
-                <span class="row-tight"><span class="led on green" aria-hidden="true"></span><span class="label">READY</span></span>
-                <span class="spacer"></span>
-                <span class="key" aria-hidden="true">OPEN &rarr;</span>
-            </div>
-        </a>
-
-        <a class="tool chassis" href="mobile/">
-            <span class="tool-index" aria-hidden="true">02</span>
-            <div class="tool-body">
-                <span class="designation tool-name">MOBILE EDITOR</span>
-                <span class="label tool-spec">TOUCH KEYBOARD / WORKS OFFLINE / INSTALLABLE / AUTOSAVES</span>
-                <ul class="tool-list">
-                    <li data-braille>Built for thumbs</li>
-                    <li data-braille>Works with no signal</li>
-                    <li data-braille>Saves as you go</li>
-                </ul>
-            </div>
-            <div class="tool-foot">
-                <span class="row-tight"><span class="led on green" aria-hidden="true"></span><span class="label">READY</span></span>
-                <span class="spacer"></span>
-                <span class="key" aria-hidden="true">OPEN &rarr;</span>
-            </div>
-        </a>
-
+<!-- ═══════════════════════════════════════════════════════ START ═══ -->
+<div id="start">
+  <header class="bar bar-top">
+    <a class="brand" href="https://isaiart.com" aria-label="ISAIART home">ISAIART <span>/ Code</span></a>
+    <div class="bar-group">
+      <span class="micro hide-sm">Local time</span>
+      <live-clock class="micro" aria-label="Local time">--:--:--</live-clock>
     </div>
+  </header>
 
-    <!-- ── PLOT: absorbs whatever height is left so the page is never a
-              band of content floating in void ──────────────────────────── -->
-    <section class="chassis plot" aria-label="System status">
-        <canvas id="globe" class="globe" aria-hidden="true"></canvas>
-        <div class="plot-read">
-            <div class="plot-row"><span class="label">STATUS</span><span class="phos" id="plotStatus">ALL SYSTEMS NOMINAL</span></div>
-            <div class="plot-row"><span class="label">HOST</span><span class="phos-dim">CODE.ISAIART.COM</span></div>
-            <div class="plot-row"><span class="label">SERVED</span><span class="phos-dim">STATIC / NO BACKEND</span></div>
-            <div class="plot-row"><span class="label">STORAGE</span><span class="phos-dim" id="plotStore">LOCAL ONLY</span></div>
-            <div class="plot-row"><span class="label">UPTIME</span><span class="phos-dim" id="plotUptime">00:00:00</span></div>
-        </div>
+  <main>
+    <section class="hero">
+      <span class="micro kicker fade">code.isaiart.com · <b>Editor</b></span>
+      <h1><span class="line"><span>Code</span></span><span class="line"><span>Anywhere</span></span></h1>
+      <p class="lede fade d1">One editor for desktop and phone, with tabs, a live preview and formatting. It works offline, installs like an app, and nothing you write leaves your browser.</p>
     </section>
 
-    <!-- ── FOOTER ──────────────────────────────────────────────────────── -->
-    <footer class="chassis page-foot">
-
-        <a class="key" href="https://isaiart.com">RETURN TO ISAIART.COM</a>
-
-        <div class="foot-right">
-            <div class="foot-meter">
-                <span id="segUnits"></span>
-                <span class="label">ACTIVE</span>
-                <span class="sr-only" id="segUnitsText">2 active tools</span>
-            </div>
+    <div class="tools">
+      <section class="tool fade d2" id="cardRecent" aria-labelledby="recentTitle">
+        <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+        <div class="tool-top">
+          <span class="tool-index">01 / Continue</span>
+          <span class="status micro"><i aria-hidden="true"></i>Saved in this browser</span>
         </div>
-    </footer>
+        <h2 class="tool-name" id="recentTitle">Your files</h2>
+        <div class="rows" id="recentRows"></div>
+        <div class="tool-foot">
+          <span class="micro" id="recentCount"></span>
+          <button class="go" id="openEditor">Open editor <span class="arw" aria-hidden="true">→</span></button>
+        </div>
+      </section>
 
-</main>
+      <section class="tool fade d3" id="cardNew" aria-labelledby="newTitle">
+        <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+        <div class="tool-top">
+          <span class="tool-index">02 / New</span>
+          <span class="micro">HTML · CSS · JS · JSON · MD</span>
+        </div>
+        <h2 class="tool-name" id="newTitle">Start something</h2>
+        <div class="rows">
+          <button class="row" data-start="page"><span class="ri" data-ico="code"></span><span class="rt"><span class="rn">New web page</span><span class="rm">An HTML page with the basics, ready to preview</span></span><span class="arw" aria-hidden="true">→</span></button>
+          <button class="row" data-start="blank"><span class="ri" data-ico="plus"></span><span class="rt"><span class="rn">Blank file</span><span class="rm">Name it anything: .css, .js, .json, .md</span></span><span class="arw" aria-hidden="true">→</span></button>
+          <button class="row" data-start="open"><span class="ri" data-ico="upload"></span><span class="rt"><span class="rn">Open from your device</span><span class="rm">Bring in files you already have</span></span><span class="arw" aria-hidden="true">→</span></button>
+        </div>
+        <div class="tool-foot">
+          <span class="micro">Or drop files anywhere on this page</span>
+          <span class="micro hide-sm"><b>Alt+N</b> in the editor</span>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="bar bar-bot">
+    <a class="micro home" href="https://isaiart.com"><span class="arw" aria-hidden="true">←</span>Back to isaiart.com</a>
+    <span class="micro">© 2026 Isaiah</span>
+  </footer>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ EDITOR ═══ -->
+<div class="ed" id="editor" hidden>
+  <header class="ed-bar">
+    <button class="ed-brand" id="toStart" title="Start screen"><i class="mk" aria-hidden="true"></i><span>ISAIART</span><b>/ Code</b></button>
+    <div class="tabs" id="tabs" role="tablist" aria-label="Open files"></div>
+    <button class="ib" id="newBtn" title="New file  (Alt+N)" data-ico="plus"></button>
+    <button class="filebtn" id="fileBtn" aria-haspopup="menu"><span class="tn" id="fileName"></span><span data-ico="down"></span></button>
+    <div class="ed-actions">
+      <button class="tb" id="fmtBtn" title="Format  (Shift+Alt+F)"><span data-ico="format"></span><span class="lbl">Format</span></button>
+      <button class="tb" id="findBtn" title="Find  (Ctrl+F)"><span data-ico="search"></span><span class="lbl">Find</span></button>
+      <button class="tb" id="saveBtn" title="Download  (Ctrl+S)"><span data-ico="download"></span><span class="lbl">Save</span></button>
+      <button class="tb" id="prevBtn" aria-pressed="false" title="Preview  (Ctrl+B)"><span data-ico="play"></span><span class="lbl">Preview</span></button>
+      <button class="tb ico" id="moreBtn" title="More" aria-haspopup="menu" data-ico="more"></button>
+    </div>
+  </header>
+
+  <div class="ed-main" id="edMain">
+    <div class="ed-code" id="edCode">
+      <div class="code-head" id="codeHead"><i class="dot" id="headDot"></i><span class="micro">Code · <b id="headName"></b></span><span class="micro" id="headLinks"></span></div>
+      <textarea id="src" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" data-gramm="false" aria-label="Code"></textarea>
+      <div class="ed-loading" id="edLoading"><span class="micro">Loading editor</span></div>
+    </div>
+    <div class="ed-split" id="split" role="separator" aria-orientation="vertical" aria-label="Resize preview"></div>
+    <section class="ed-prev" id="prev" aria-label="Preview">
+      <div class="prev-head">
+        <span class="micro">Preview · <b id="prevName"></b></span>
+        <button class="tb ico" id="rerunBtn" title="Run again" data-ico="refresh"></button>
+        <button class="tb ico" id="tabBtn" title="Open in a new tab  (Ctrl+Enter)" data-ico="external"></button>
+        <button class="tb ico" id="closePrev" title="Close preview" data-ico="x"></button>
+      </div>
+      <div class="frame" id="frameBox"><iframe id="frame" title="Preview of your code"></iframe></div>
+    </section>
+  </div>
+
+  <div class="keyrow" id="keyrow" role="toolbar" aria-label="Coding keys"></div>
+
+  <footer class="ed-status">
+    <span class="micro" id="stPos">Ln 1, Col 1</span>
+    <span class="micro hide-narrow" id="stCounts"></span>
+    <span class="micro" id="stMode"></span>
+    <span class="grow"></span>
+    <span class="micro save ok" id="stSave"><i></i><span>Saved</span></span>
+  </footer>
+</div>
+
+<div class="veil" aria-hidden="true"></div>
+<div class="toasts" role="status" aria-live="polite"></div>
+<input type="file" id="fileIn" multiple hidden accept=".html,.htm,.css,.js,.mjs,.json,.md,.txt,.svg,.xml,text/*">
 
 <script>
 (function () {
-    'use strict';
+  'use strict';
 
-    var doc = document;
-    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var doc = document;
+  var $ = function (id) { return doc.getElementById(id); };
+  var mq = window.matchMedia ? matchMedia('(prefers-reduced-motion: reduce)') : null;
+  function reduced() { return mq ? mq.matches : false; }
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function debounce(fn, ms) { var t = 0; return function () { var a = arguments, s = this; clearTimeout(t); t = setTimeout(function () { fn.apply(s, a); }, ms); }; }
+  var narrow = window.matchMedia('(max-width: 760px)');
+  var coarse = window.matchMedia('(pointer: coarse)');
+  var isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+  var MOD = isMac ? '⌘' : 'Ctrl';
 
-    /* ── Boot wipe on the control screen, once per tab session ──────────── */
-    CAS.bootOnce(doc.getElementById('headScreen'));
-
-    /* ── Clock ──────────────────────────────────────────────────────────── */
-    var clockEl = doc.getElementById('clock');
-
-    function pad(n) { return (n < 10 ? '0' : '') + n; }
-
-    function tickClock() {
-        var d = new Date();
-        clockEl.textContent = pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
-    }
-    tickClock();
-    setInterval(tickClock, 1000);
-
-    /* ── Dark / light rocker ────────────────────────────────────────────── */
-    var sw = doc.getElementById('phosSw');
-    var phosColor = '';
-
-    /* Fall back through the token, never a literal — a hardcoded amber here
-       would keep stroking amber after the display was switched to light. */
-    function readPhosColor() {
-        var cs = getComputedStyle(doc.documentElement);
-        var v = (cs.getPropertyValue('--phos') || '').trim() ||
-                (cs.getPropertyValue('--amber') || '').trim();
-        if (v) phosColor = v;          /* keep the last known-good otherwise */
-    }
-
-    sw.checked = CAS.getTheme() === 'light';
-    readPhosColor();
-
-    sw.addEventListener('change', function () {
-        /* Drive from the checkbox, not from a toggle: where storage is blocked
-           the runtime can't read its own state back, and a toggle there fights
-           the switch the user just threw. */
-        var mode = CAS.setTheme(sw.checked ? 'light' : 'dark');
-        sw.checked = mode === 'light';
-        readPhosColor();
-        if (!running) draw();
-        CAS.toast(mode === 'light' ? 'LIGHT MODE' : 'DARK MODE');
+  /* ── icons: one stroke set, drawn in place of [data-ico] ──────────────── */
+  var ICO = {
+    plus: '<path d="M12 5v14M5 12h14"/>',
+    code: '<path d="M8 8l-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"/>',
+    x: '<path d="M6 6l12 12M18 6L6 18"/>',
+    down: '<path d="M6 9l6 6 6-6"/>',
+    format: '<path d="M4 6h16M4 10h10M4 14h16M4 18h10"/>',
+    search: '<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/>',
+    download: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
+    play: '<path d="M7 5l12 7-12 7z"/>',
+    more: '<circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/>',
+    refresh: '<path d="M20 11a8 8 0 10-2.3 5.7M20 5v6h-6"/>',
+    external: '<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h5"/>',
+    upload: '<path d="M12 20V9M7 14l5-5 5 5M5 4h14"/>',
+    copy: '<rect x="8" y="8" width="12" height="12" rx="1"/><path d="M16 8V5a1 1 0 00-1-1H5a1 1 0 00-1 1v10a1 1 0 001 1h3"/>',
+    paste: '<rect x="5" y="5" width="14" height="16" rx="1"/><path d="M9 5V3h6v2"/>',
+    trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
+    keyboard: '<rect x="3" y="6" width="18" height="12" rx="1"/><path d="M7 10h.01M11 10h.01M15 10h.01M7 14h10"/>',
+    undo: '<path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 010 12h-3"/>',
+    redo: '<path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 000 12h3"/>',
+    tab: '<path d="M4 12h12M12 8l4 4-4 4M20 6v12"/>',
+    pencil: '<path d="M4 20h4L19 9l-4-4L4 16v4zM14 6l4 4"/>',
+    install: '<path d="M12 3v12M7 10l5 5 5-5M4 15v4a1 1 0 001 1h14a1 1 0 001-1v-4"/>',
+    wrap: '<path d="M4 6h16M4 12h12a3 3 0 010 6h-4M14 16l-2 2 2 2M4 18h5"/>',
+    lines: '<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/>',
+    tick: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+    file: '<path d="M6 3h8l4 4v14H6zM14 3v4h4"/>',
+    home: '<path d="M4 11l8-7 8 7M6 10v10h12V10"/>'
+  };
+  function icon(n) { return '<svg class="i" viewBox="0 0 24 24" aria-hidden="true">' + (ICO[n] || '') + '</svg>'; }
+  function paintIcons(root) {
+    Array.prototype.forEach.call((root || doc).querySelectorAll('[data-ico]'), function (el) {
+      if (!el._ico) { el._ico = 1; el.insertAdjacentHTML('afterbegin', icon(el.getAttribute('data-ico'))); }
     });
+  }
 
-    /* ── Oscilloscope ───────────────────────────────────────────────────── */
-    var cv = doc.getElementById('scope');
-    var ctx = cv.getContext('2d');
-    var W = 120, H = 28;
-    var dpr = Math.min(window.devicePixelRatio || 1, 2);
-    cv.width = Math.round(W * dpr);
-    cv.height = Math.round(H * dpr);
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  /* ── toasts ───────────────────────────────────────────────────────────── */
+  function toast(msg, bad) {
+    var host = doc.querySelector('.toasts');
+    var t = doc.createElement('div');
+    t.className = 'toast' + (bad ? ' bad' : '');
+    t.textContent = msg;
+    host.appendChild(t);
+    while (host.children.length > 3) host.firstChild.remove();
+    setTimeout(function () { t.classList.add('out'); setTimeout(function () { t.remove(); }, 260); }, bad ? 3200 : 2000);
+  }
 
-    var trace = new Array(W);
-    var phase = 0;
-    for (var i = 0; i < W; i++) { trace[i] = sample(); }
+  /* ══════════════════════════════════════════════════ custom elements ══ */
 
-    function sample() {
-        phase += 0.13;
-        var v = Math.sin(phase) * 0.55
-              + Math.sin(phase * 0.37 + 1.1) * 0.2
-              + (Math.random() - 0.5) * 0.14;
-        if (v > 1) v = 1; else if (v < -1) v = -1;
-        return H / 2 - v * (H / 2 - 3);
+  class LiveClock extends HTMLElement {
+    connectedCallback() {
+      var self = this;
+      function tick() { var d = new Date(); self.textContent = pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds()); }
+      tick(); this._t = setInterval(tick, 1000);
     }
+    disconnectedCallback() { clearInterval(this._t); }
+  }
 
-    function draw() {
+  /* <space-field>: the 404's sky. A deterministic star chart seen through one
+     point mass — disp(β) = ½(√(β² + 4θE²) − β) pushes each star radially out,
+     stretching the near ones into arcs around a hard-edged shadow with a
+     photon ring at the Einstein radius — and the page's two hairlines are
+     redrawn through the same field so they bow around it. The lens idles on
+     a small orbit beside the headline, perches on the card you point at, and
+     swells to swallow the sky when you go into the editor. */
+  class SpaceField extends HTMLElement {
+    connectedCallback() {
+      var cv = doc.createElement('canvas');
+      this.appendChild(cv);
+      var ctx = cv.getContext && cv.getContext('2d');
+      if (!ctx) return;
+      var self = this;
+      var W = 0, H = 0, dpr = 1, thE = 70, TAU = Math.PI * 2;
+
+      function mulberry32(a) {
+        return function () {
+          a |= 0; a = (a + 0x6D2B79F5) | 0;
+          var t = Math.imul(a ^ (a >>> 15), 1 | a);
+          t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+          return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        };
+      }
+      var SN = 1900, sx = new Float32Array(SN), sy = new Float32Array(SN),
+          sz = new Float32Array(SN), sa = new Float32Array(SN), sd = new Float32Array(SN);
+      var r = mulberry32(0xC0DE);
+      for (var i = 0; i < SN; i++) {
+        sx[i] = r(); sy[i] = r();
+        sz[i] = r() < 0.16 ? 2 : 1;
+        sa[i] = 0.14 + r() * 0.5;
+        sd[i] = 0.25 + r() * 0.75;          // depth: nearer stars drift faster
+      }
+
+      var mx = 0, my = 0, tx = 0, ty = 0, k = 1, tk = 1, target = null, leaving = false;
+      var drift = 0, lastT = 0, t0 = 0, ruleP = 0;
+      var h1 = doc.querySelector('#start h1'), main = doc.querySelector('#start main');
+      var topBar = doc.querySelector('#start .bar-top');
+
+      function size() {
+        W = window.innerWidth; H = window.innerHeight;
+        dpr = Math.min(window.devicePixelRatio || 1, W < 700 ? 1.5 : 2);
+        cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        thE = Math.max(W < 700 ? 40 : 64, Math.min(132, Math.min(W, H) * 0.115));
+        if (!mx && !my) { rest(0); mx = tx; my = ty; }
+      }
+      function count() { return Math.max(420, Math.min(SN, Math.round(W * H / 1150))); }
+
+      // idle: inside the content column, level with the headline, in the
+      // open space to its right, on a small slow orbit
+      function rest(t) {
+        var hr = h1.getBoundingClientRect(), mr = main.getBoundingClientRect();
+        var cx = W < 860 ? W * 0.78 : mr.left + mr.width * 0.74;
+        var cy = hr.top + hr.height * 0.5;
+        tx = cx + Math.cos(t * 0.00011) * Math.min(W * 0.03, 48);
+        ty = cy + Math.sin(t * 0.00017) * Math.min(H * 0.03, 28);
+      }
+
+      function arc(rr, phi, len, w, a) {
+        if (!(a > 0.02) || !(rr > 0.5)) return;
+        if (a > 0.95) a = 0.95;
+        var half = Math.min(0.26, len / (2 * rr));
+        if (half < 0.004) {
+          ctx.fillStyle = 'rgba(244,244,242,' + a.toFixed(3) + ')';
+          ctx.fillRect(mx + Math.cos(phi) * rr, my + Math.sin(phi) * rr, Math.max(1, w), Math.max(1, w));
+          return;
+        }
+        ctx.strokeStyle = 'rgba(244,244,242,' + a.toFixed(3) + ')';
+        ctx.lineWidth = Math.max(0.7, w);
+        ctx.beginPath(); ctx.arc(mx, my, rr, phi - half, phi + half); ctx.stroke();
+      }
+
+      function rule(y, p, fromRight, E) {
+        if (!(p > 0) || y < -40 || y > H + 40) return;
+        var STEPS = 160, x0 = fromRight ? W * (1 - p) : 0, x1 = fromRight ? W : W * p;
+        ctx.beginPath();
+        for (var i = 0; i <= STEPS; i++) {
+          var x = x0 + (x1 - x0) * i / STEPS, dx = x - mx, dy = y - my;
+          var b = Math.sqrt(dx * dx + dy * dy); if (b < 0.001) b = 0.001;
+          var u = E >= 1 ? 0.5 * (Math.sqrt(b * b + 4 * E * E) - b) / b : 0;
+          if (i) ctx.lineTo(x + dx * u, y + dy * u); else ctx.moveTo(x + dx * u, y + dy * u);
+        }
+        ctx.strokeStyle = 'rgba(255,255,255,0.14)'; ctx.lineWidth = 1; ctx.stroke();
+      }
+
+      function draw() {
         ctx.clearRect(0, 0, W, H);
-        ctx.strokeStyle = phosColor;
-        ctx.lineWidth = 1;
-        ctx.globalAlpha = 0.16;
-        ctx.beginPath();
-        ctx.moveTo(0, H / 2 + 0.5);
-        ctx.lineTo(W, H / 2 + 0.5);
-        ctx.stroke();
-        ctx.globalAlpha = 1;
-        ctx.lineWidth = 1.25;
-        ctx.lineJoin = 'round';
-        ctx.beginPath();
-        ctx.moveTo(0, trace[0]);
-        for (var i = 1; i < W; i++) { ctx.lineTo(i, trace[i]); }
-        ctx.stroke();
-    }
+        var E = thE * k, n = count();
+        for (var i = 0; i < n; i++) {
+          var x = ((sx[i] * W + drift * sd[i]) % W + W) % W, y = sy[i] * H;
+          var dx = x - mx, dy = y - my, b = Math.sqrt(dx * dx + dy * dy);
+          if (b < 0.001) b = 0.001;
+          if (E < 1 || b > E * 9) {
+            ctx.fillStyle = 'rgba(244,244,242,' + sa[i].toFixed(3) + ')';
+            ctx.fillRect(x, y, sz[i], sz[i]);
+            continue;
+          }
+          var root = Math.sqrt(b * b + 4 * E * E), phi = Math.atan2(dy, dx);
+          var th = 0.5 * (b + root), mt = th / b, mr = 0.5 * (1 + b / root);
+          arc(th, phi, sz[i] * mt, sz[i] * mr, sa[i] * Math.min(3.4, mt * mr));
+          var thm = 0.5 * (root - b), mt2 = thm / b, mr2 = 0.5 * (b / root - 1) + 0.5;
+          arc(thm, phi + Math.PI, sz[i] * mt2, sz[i] * Math.abs(mr2), sa[i] * Math.min(1.2, Math.abs(mt2 * mr2)) * 0.85);
+        }
+        if (E >= 1) {
+          var sh = ctx.createRadialGradient(mx, my, E * 0.32, mx, my, E * 0.88);
+          sh.addColorStop(0, 'rgba(6,7,11,1)'); sh.addColorStop(0.74, 'rgba(6,7,11,0.97)'); sh.addColorStop(1, 'rgba(6,7,11,0)');
+          ctx.fillStyle = sh; ctx.beginPath(); ctx.arc(mx, my, E * 0.88, 0, TAU); ctx.fill();
+          ctx.strokeStyle = 'rgba(143,180,255,0.12)'; ctx.lineWidth = 6;
+          ctx.beginPath(); ctx.arc(mx, my, E * 0.98, 0, TAU); ctx.stroke();
+          ctx.strokeStyle = 'rgba(214,228,255,0.5)'; ctx.lineWidth = 1.2;
+          ctx.beginPath(); ctx.arc(mx, my, E * 0.98, 0, TAU); ctx.stroke();
+        }
+        // the top hairline bows around the lens; the bottom one, far from it,
+        // stays a plain CSS rule
+        var tb = topBar.getBoundingClientRect().bottom - 0.5;
+        rule(tb, ruleP, false, E);
+      }
 
-    var raf = 0, last = 0, running = false;
-
-    function frame(ts) {
-        raf = requestAnimationFrame(frame);
-        if (ts - last < 33) return;   /* ~30fps */
-        last = ts;
-        trace.shift();
-        trace.push(sample());
+      var raf = 0, running = false, paused = false;
+      function frame(now) {
+        var dt = lastT ? Math.min((now - lastT) / 1000, 0.05) : 0.016;
+        lastT = now;
+        drift += dt * 6;
+        if (!t0) t0 = now;
+        var q = Math.min(1, (now - t0 - 100) / 1100);
+        ruleP = q <= 0 ? 0 : 1 - Math.pow(1 - q, 4);
+        if (leaving) { tx = W / 2; ty = H / 2; tk = 14; }
+        else if (target) {
+          var rc = target.getBoundingClientRect();
+          tx = rc.right - Math.min(120, rc.width * 0.2); ty = rc.top; tk = 0.9;
+        } else {
+          rest(now);
+          // on a phone the page scrolls under a fixed sky: once the headline
+          // has gone, the lens lets go rather than sit behind a card
+          tk = W < 860 && window.scrollY > 90 ? 0 : 1;
+        }
+        var ease = 1 - Math.pow(0.0025, dt);
+        mx += (tx - mx) * ease; my += (ty - my) * ease;
+        k += (tk - k) * Math.min(1, leaving ? ease * 1.8 : ease);
         draw();
-    }
-
-    function start() {
-        if (running || reduce) return;
-        running = true;
-        last = 0;
         raf = requestAnimationFrame(frame);
+      }
+      function start() {
+        if (running || paused || doc.hidden) return;
+        if (reduced()) { rest(0); mx = tx; my = ty; ruleP = 1; draw(); return; }
+        running = true; lastT = 0; raf = requestAnimationFrame(frame);
+      }
+      function stop() { if (running) { cancelAnimationFrame(raf); running = false; } }
+
+      size(); draw();
+      doc.documentElement.classList.add('lens-live');
+      requestAnimationFrame(function () { self.classList.add('live'); });
+      start();
+
+      var rz = 0;
+      window.addEventListener('resize', function () { clearTimeout(rz); rz = setTimeout(function () { size(); draw(); }, 120); });
+      doc.addEventListener('visibilitychange', function () { if (doc.hidden) stop(); else start(); });
+      if (mq && mq.addEventListener) mq.addEventListener('change', function () { stop(); start(); });
+
+      this.focusOn = function (el) { target = el; };
+      this.collapse = function () { leaving = true; };
+      this.reset = function () { leaving = false; target = null; k = 1; };
+      // the editor has no sky: stop drawing it entirely while it is open
+      this.pause = function () { paused = true; stop(); };
+      this.resume = function () { paused = false; size(); ruleP = 1; t0 = -1e9; start(); };
     }
+  }
 
-    function stop() {
-        if (!running) return;
-        running = false;
-        cancelAnimationFrame(raf);
-        raf = 0;
+  /* <ed-menu>: a popover list. Items: {label, icon, key, check, on, danger, run} or 'sep' */
+  class EdMenu extends HTMLElement {
+    show(anchor, items) {
+      var self = this;
+      this.setAttribute('role', 'menu');
+      this.innerHTML = '';
+      items.forEach(function (it) {
+        if (it === 'sep') { self.appendChild(Object.assign(doc.createElement('div'), { className: 'sep' })); return; }
+        if (it.label && it.heading) { var l = doc.createElement('div'); l.className = 'lab micro'; l.textContent = it.label; self.appendChild(l); return; }
+        var b = doc.createElement('button');
+        b.className = 'mi' + (it.danger ? ' danger' : '') + (it.on ? ' on' : '');
+        b.setAttribute('role', it.check != null ? 'menuitemcheckbox' : 'menuitem');
+        if (it.check != null) b.setAttribute('aria-checked', String(!!it.check));
+        b.innerHTML = (it.icon ? icon(it.icon) : it.dot ? '<span class="dw"><i class="dot ' + it.dot + '"></i></span>' : '') + '<span class="ml"></span>' +
+          (it.check != null ? '<span class="chk' + (it.check ? ' on' : '') + '">' + (it.check ? icon('tick') : '') + '</span>' :
+           it.key ? '<span class="k">' + it.key + '</span>' : '');
+        b.querySelector('.ml').textContent = it.label;
+        b.addEventListener('click', function () { self.close(); it.run(); });
+        self.appendChild(b);
+      });
+      doc.body.appendChild(this);
+      var r = anchor.getBoundingClientRect(), w = this.offsetWidth, h = this.offsetHeight;
+      var left = Math.max(8, Math.min(r.right - w, window.innerWidth - w - 8));
+      var top = r.bottom + 6, up = false;
+      if (top + h > window.innerHeight - 8) { top = Math.max(8, r.top - h - 6); up = true; }
+      this.classList.toggle('up', up);
+      this.style.left = left + 'px'; this.style.top = top + 'px';
+      this._out = function (e) { if (!self.contains(e.target) && e.target !== anchor && !anchor.contains(e.target)) self.close(); };
+      this._key = function (e) {
+        var btns = Array.prototype.slice.call(self.querySelectorAll('.mi')), i = btns.indexOf(doc.activeElement);
+        if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); self.close(); anchor.focus(); }
+        else if (e.key === 'ArrowDown') { e.preventDefault(); (btns[i + 1] || btns[0]).focus(); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); (btns[i - 1] || btns[btns.length - 1]).focus(); }
+      };
+      setTimeout(function () { doc.addEventListener('pointerdown', self._out, true); }, 0);
+      doc.addEventListener('keydown', this._key, true);
+      var first = this.querySelector('.mi'); if (first) first.focus({ preventScroll: true });
     }
-
-    draw();
-    if (!reduce) {
-        start();
-        doc.addEventListener('visibilitychange', function () {
-            if (doc.hidden) { stop(); } else { start(); }
-        });
+    close() {
+      doc.removeEventListener('pointerdown', this._out, true);
+      doc.removeEventListener('keydown', this._key, true);
+      this.remove();
     }
+  }
 
-    /* ── Tool-count readout ─────────────────────────────────────────────── */
-    var online = doc.querySelectorAll('.tool').length;
-    var seg = CAS.segInit(doc.getElementById('segUnits'), 2);
-    CAS.segSet(seg, online < 10 ? '0' + online : String(online));
-    doc.getElementById('segUnitsText').textContent = online + ' tools available';
-
-    CAS.brailleAnnotate();
-
-    /* ── Plot panel ─────────────────────────────────────────────────────── */
-    CAS.globe(doc.getElementById('globe'), { parallels: 7, meridians: 8 });
-
-    /* Uptime runs from the site going live — 2 Feb 2025, 20:10 local — not
-       from page load, so it reads as the machine's service life. */
-    var EPOCH = new Date(2025, 1, 2, 20, 10, 0).getTime();
-    var upEl = doc.getElementById('plotUptime');
-
-    function tickUptime() {
-        var s = Math.floor((Date.now() - EPOCH) / 1000);
-        if (s < 0) { upEl.textContent = 'NOT YET IN SERVICE'; return; }
-        var d = Math.floor(s / 86400);
-        s -= d * 86400;
-        upEl.textContent = d + 'd ' + pad(Math.floor(s / 3600)) + ':' +
-                           pad(Math.floor(s / 60) % 60) + ':' + pad(s % 60);
+  /* <ed-dialog>: a small modal. ask({title, body, ok, cancel, danger, validate}) → Promise */
+  class EdDialog extends HTMLElement {
+    open(o) {
+      var self = this;
+      return new Promise(function (resolve) {
+        self.setAttribute('role', 'dialog'); self.setAttribute('aria-modal', 'true');
+        self.innerHTML = '<div class="box"><header><h2></h2></header><div class="body"></div><footer></footer></div>';
+        self.querySelector('h2').textContent = o.title;
+        var body = self.querySelector('.body');
+        (o.body || []).forEach(function (n) { body.appendChild(typeof n === 'string' ? Object.assign(doc.createElement('p'), { textContent: n }) : n); });
+        var err = doc.createElement('div'); err.className = 'err'; if (o.validate) body.appendChild(err);
+        var foot = self.querySelector('footer');
+        var prev = doc.activeElement;
+        function done(v) {
+          if (self._done) return; self._done = true;
+          doc.removeEventListener('keydown', key, true);
+          self.classList.add('out'); setTimeout(function () { self.remove(); }, 180);
+          if (prev && prev.focus) try { prev.focus({ preventScroll: true }); } catch (e) {}
+          resolve(v);
+        }
+        function ok() {
+          if (o.validate) { var m = o.validate(); if (m) { err.textContent = m; return; } }
+          done(true);
+        }
+        if (o.cancel !== false) {
+          var c = Object.assign(doc.createElement('button'), { className: 'tb', textContent: o.cancel || 'Cancel' });
+          c.addEventListener('click', function () { done(false); }); foot.appendChild(c);
+        }
+        var b = Object.assign(doc.createElement('button'), { className: 'tb ' + (o.danger ? 'danger' : 'primary'), textContent: o.ok || 'OK' });
+        b.addEventListener('click', ok); foot.appendChild(b);
+        function key(e) {
+          if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); done(false); }
+          else if (e.key === 'Enter' && !e.shiftKey && e.target.tagName !== 'BUTTON') { e.preventDefault(); e.stopPropagation(); ok(); }
+          else if (e.key === 'Tab') {             // keep focus inside the dialog
+            var f = self.querySelectorAll('input,button'); if (!f.length) return;
+            if (e.shiftKey && doc.activeElement === f[0]) { e.preventDefault(); f[f.length - 1].focus(); }
+            else if (!e.shiftKey && doc.activeElement === f[f.length - 1]) { e.preventDefault(); f[0].focus(); }
+          }
+        }
+        doc.addEventListener('keydown', key, true);
+        self.addEventListener('pointerdown', function (e) { if (e.target === self) done(false); });
+        doc.body.appendChild(self);
+        var fi = self.querySelector('input') || b;
+        setTimeout(function () {
+          fi.focus();
+          // a file name selects up to its extension, the way editors rename
+          if (fi.tagName === 'INPUT') { var dot = fi.value.lastIndexOf('.'); fi.setSelectionRange(0, dot > 0 ? dot : fi.value.length); }
+        }, 30);
+      });
     }
-    tickUptime();
-    setInterval(tickUptime, 1000);
+  }
 
-    /* Report honestly whether local storage is actually available. */
-    var store = 'LOCAL ONLY';
+  customElements.define('live-clock', LiveClock);
+  customElements.define('space-field', SpaceField);
+  customElements.define('ed-menu', EdMenu);
+  customElements.define('ed-dialog', EdDialog);
+
+  function menu(anchor, items) { var m = doc.querySelector('ed-menu'); if (m) m.close(); doc.createElement('ed-menu').show(anchor, items); }
+  function ask(o) { return doc.createElement('ed-dialog').open(o); }
+  function field(label, value, extra) {
+    var l = doc.createElement('label'); l.className = 'fld';
+    l.innerHTML = '<span class="micro"></span><input type="text" spellcheck="false" autocomplete="off" autocapitalize="off">';
+    l.firstChild.textContent = label;
+    var inp = l.querySelector('input'); inp.value = value || '';
+    if (extra) Object.assign(inp, extra);
+    return { el: l, input: inp };
+  }
+
+  /* ════════════════════════════════════════════════════════════ files ══
+     Storage keeps the desktop editor's format, so nothing is lost:
+       codetools.files         JSON [{name, content, updated?}]
+       codetools.files.active  index as a string
+     The old mobile editor kept a single buffer in codetools.mobile.content;
+     on first run it is brought in as its own file (and left in place). */
+  var K_FILES = 'codetools.files', K_ACTIVE = 'codetools.files.active',
+      K_MOBILE = 'codetools.mobile.content', K_MOBILE_DONE = 'codetools.mobile.imported',
+      K_PREFS = 'codetools.prefs', K_GUTTER = 'codetools.mobile.gutter';
+
+  var STARTER = '<!doctype html>\n<html lang="en">\n<head>\n  <meta charset="utf-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1">\n  <title>Hello</title>\n  <style>\n    body { font-family: system-ui, sans-serif; margin: 3rem; }\n  </style>\n</head>\n<body>\n  <h1>Hello</h1>\n  <p>Edit this page and the preview follows along.</p>\n</body>\n</html>\n';
+
+  var files = [], active = 0, storeOk = true, warned = false;
+  var prefs = { wrap: true, lines: true, prevW: 46 };
+
+  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { localStorage.setItem(k, v); }
+
+  function readStore() {
     try {
-        localStorage.setItem('isa.probe', '1');
-        localStorage.removeItem('isa.probe');
-    } catch (e) { store = 'BLOCKED — SESSION ONLY'; }
-    doc.getElementById('plotStore').textContent = store;
+      var a = JSON.parse(lsGet(K_FILES) || 'null');
+      if (Array.isArray(a)) {
+        files = a.filter(function (f) { return f && typeof f.name === 'string'; })
+                 .map(function (f) { return { name: f.name, content: typeof f.content === 'string' ? f.content : '', updated: +f.updated || 0 }; });
+      }
+    } catch (e) { files = []; }
+    var i = parseInt(lsGet(K_ACTIVE), 10);
+    active = i >= 0 && i < files.length ? i : 0;
 
-    CAS.pageTransition();
+    var mob = lsGet(K_MOBILE);
+    if (mob && !lsGet(K_MOBILE_DONE)) {
+      if (!files.some(function (f) { return f.content === mob; })) {
+        files.push({ name: uniqueName(files.length ? 'from-mobile.html' : 'index.html'), content: mob, updated: Date.now() });
+        if (files.length === 1) active = 0;
+      }
+      try { lsSet(K_MOBILE_DONE, '1'); } catch (e) {}
+      writeStore();
+    }
+    try { Object.assign(prefs, JSON.parse(lsGet(K_PREFS) || '{}')); } catch (e) {}
+    if (lsGet(K_PREFS) == null && lsGet(K_GUTTER) === '0') prefs.lines = false;
+  }
+  function savePrefs() { try { lsSet(K_PREFS, JSON.stringify(prefs)); } catch (e) {} }
+
+  // Quota and private mode both throw here; showing "Saved" anyway is how
+  // somebody loses a file, so the status says so plainly.
+  function writeStore() {
+    try {
+      lsSet(K_FILES, JSON.stringify(files));
+      lsSet(K_ACTIVE, String(active));
+      storeOk = true;
+    } catch (e) {
+      storeOk = false;
+      if (!warned) { warned = true; toast('Storage blocked — download to keep your work', true); }
+    }
+    showSave();
+  }
+  var dirty = false;
+  var saveSoon = debounce(function () { dirty = false; writeStore(); }, 250);
+  function touched() { dirty = true; showSave(); saveSoon(); }
+  function flush() { if (dirty) { dirty = false; writeStore(); } }
+  window.addEventListener('pagehide', flush);
+  window.addEventListener('beforeunload', flush);
+  doc.addEventListener('visibilitychange', function () { if (doc.hidden) flush(); });
+
+  function extOf(n) { var m = /\.([a-z0-9]+)$/i.exec(n || ''); return m ? m[1].toLowerCase() : ''; }
+  function kindOf(n) {
+    var e = extOf(n);
+    return e === 'htm' ? 'html' : e === 'mjs' ? 'js' : e === 'svg' || e === 'xml' ? 'xml' : e === 'txt' ? 'txt' : e || 'txt';
+  }
+  function modeFor(n) {
+    var e = extOf(n);
+    if (e === 'css' || e === 'scss' || e === 'less') return 'css';
+    if (e === 'js' || e === 'mjs') return 'javascript';
+    if (e === 'json') return { name: 'javascript', json: true };
+    if (e === 'xml' || e === 'svg') return 'xml';
+    if (e === 'html' || e === 'htm') return 'htmlmixed';
+    if (e === 'md') return 'text/plain';
+    return 'text/plain';
+  }
+  var LANG = { html: 'HTML', css: 'CSS', js: 'JavaScript', json: 'JSON', md: 'Markdown', xml: 'XML', txt: 'Plain text' };
+  function langOf(n) { return LANG[kindOf(n)] || (extOf(n) ? extOf(n).toUpperCase() : 'Plain text'); }
+  function mimeFor(n) {
+    var e = extOf(n);
+    return ({ css: 'text/css', js: 'text/javascript', mjs: 'text/javascript', json: 'application/json', md: 'text/markdown', txt: 'text/plain', svg: 'image/svg+xml', xml: 'application/xml' }[e] || 'text/html') + ';charset=utf-8';
+  }
+  function uniqueName(n, skip) {
+    var taken = function (x) { return files.some(function (f, i) { return i !== skip && f.name.toLowerCase() === x.toLowerCase(); }); };
+    if (!taken(n)) return n;
+    var m = /^(.*?)(\.[^.]*)?$/.exec(n), base = m[1], ext = m[2] || '', k = 2;
+    while (taken(base + '-' + k + ext)) k++;
+    return base + '-' + k + ext;
+  }
+  function checkName(n, skip) {
+    n = n.trim();
+    if (!n) return 'Give the file a name.';
+    if (/[\\/:*?"<>|]/.test(n)) return 'Names can’t contain \\ / : * ? " < > |';
+    if (files.some(function (f, i) { return i !== skip && f.name.toLowerCase() === n.toLowerCase(); })) return 'There’s already a file called ' + n + '.';
+    return '';
+  }
+  function fmtSize(n) { return n < 1024 ? n + ' B' : (n / 1024).toFixed(n < 10240 ? 1 : 0) + ' KB'; }
+  function ago(t) {
+    if (!t) return '';
+    var s = Math.round((Date.now() - t) / 1000);
+    if (s < 60) return 'just now';
+    var m = Math.round(s / 60); if (m < 60) return m + ' min ago';
+    var h = Math.round(m / 60); if (h < 24) return h + ' h ago';
+    var d = Math.round(h / 24); return d === 1 ? 'yesterday' : d + ' days ago';
+  }
+
+  /* ════════════════════════════════════════════════════ start screen ══ */
+  var sky = doc.querySelector('space-field');
+
+  function renderRecent() {
+    var rows = $('recentRows');
+    rows.innerHTML = '';
+    if (!files.length) {
+      var p = doc.createElement('p'); p.className = 'empty';
+      p.textContent = 'Nothing here yet. Files you make are kept in this browser as you type, and they’ll be waiting here next time.';
+      rows.appendChild(p);
+      $('recentCount').textContent = 'No files yet';
+      $('openEditor').innerHTML = 'Start with a page <span class="arw" aria-hidden="true">→</span>';
+      return;
+    }
+    var order = files.map(function (f, i) { return i; })
+      .sort(function (a, b) { return (files[b].updated || 0) - (files[a].updated || 0) || (a === active ? -1 : b === active ? 1 : a - b); });
+    var show = window.innerHeight < 900 && window.innerWidth > 860 ? 3 : 4;
+    order.slice(0, show).forEach(function (i) {
+      var f = files[i];
+      var b = doc.createElement('button'); b.className = 'row';
+      var meta = [langOf(f.name), fmtSize(new Blob([f.content]).size), ago(f.updated)].filter(Boolean).join(' · ');
+      b.innerHTML = '<span class="fd"><i class="dot ' + kindOf(f.name) + '"></i></span><span class="rt"><span class="rn"></span><span class="rm"></span></span><span class="arw" aria-hidden="true">→</span>';
+      b.querySelector('.rn').textContent = f.name;
+      b.querySelector('.rm').textContent = meta;
+      b.addEventListener('click', function () { active = i; enterEditor(); });
+      rows.appendChild(b);
+    });
+    $('recentCount').textContent = files.length + (files.length === 1 ? ' file' : ' files') + (files.length > show ? ' · showing ' + show : '');
+    $('openEditor').innerHTML = 'Open editor <span class="arw" aria-hidden="true">→</span>';
+  }
+
+  Array.prototype.forEach.call(doc.querySelectorAll('#start .tool'), function (card) {
+    function on() { if (sky.focusOn) sky.focusOn(card); }
+    function off() { if (sky.focusOn && !card.contains(doc.activeElement)) sky.focusOn(null); }
+    card.addEventListener('pointerenter', on);
+    card.addEventListener('pointerleave', off);
+    card.addEventListener('focusin', on);
+    card.addEventListener('focusout', function (e) { if (!card.contains(e.relatedTarget) && sky.focusOn) sky.focusOn(null); });
+    card.addEventListener('pointermove', function (e) {
+      var r = card.getBoundingClientRect();
+      card.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+      card.style.setProperty('--my', (e.clientY - r.top) + 'px');
+    });
+  });
+
+  $('openEditor').addEventListener('click', function () {
+    if (!files.length) { addFile('index.html', STARTER, true); }
+    enterEditor();
+  });
+  Array.prototype.forEach.call(doc.querySelectorAll('[data-start]'), function (b) {
+    b.addEventListener('click', function () {
+      var what = b.getAttribute('data-start');
+      if (what === 'open') { $('fileIn').click(); return; }
+      enterEditor(function () { newFileDialog(what === 'page' ? 'page' : 'blank'); });
+    });
+  });
+
+  /* ════════════════════════════════════════════════════ view switching ══ */
+  var view = 'start', edReady = false, edBooting = false;
+
+  function setView(v, animate) {
+    view = v;
+    doc.body.setAttribute('data-view', v);
+    $('start').hidden = v !== 'start';
+    $('editor').hidden = v !== 'editor';
+    if (v === 'editor') {
+      if (sky.pause) sky.pause();
+      doc.title = (files[active] ? files[active].name + ' — ' : '') + 'Code';
+      $('editor').classList.remove('out');
+      if (animate) { $('editor').classList.remove('in'); void $('editor').offsetWidth; $('editor').classList.add('in'); }
+    } else {
+      doc.title = 'Code — ISAIART';
+      if (sky.reset) { sky.reset(); sky.resume(); }
+      renderRecent();
+      if (animate) { $('start').classList.remove('back-in'); void $('start').offsetWidth; $('start').classList.add('back-in'); }
+    }
+  }
+
+  function enterEditor(then) {
+    if (view === 'editor') { if (then) then(); return; }
+    history.pushState({ v: 'editor' }, '', '#edit');
+    bootEditor();
+    if (reduced()) { setView('editor', false); afterEnter(); return; }
+    doc.documentElement.classList.add('leaving');
+    if (sky.collapse) sky.collapse();
+    setTimeout(function () {
+      doc.documentElement.classList.remove('leaving');
+      setView('editor', true);
+      afterEnter();
+    }, 560);
+    function afterEnter() {
+      if (edReady) { openFile(active, true); ed.refresh(); ed.focus(); }
+      if (then) waitReady(then);
+    }
+  }
+  function leaveEditor() {
+    flush();
+    if (history.state && history.state.v === 'editor') { history.back(); return; }
+    showStart();
+  }
+  function showStart() {
+    if (reduced()) { setView('start', false); return; }
+    $('editor').classList.add('out');
+    setTimeout(function () { setView('start', true); history.replaceState(null, '', location.pathname); }, 200);
+  }
+  window.addEventListener('popstate', function () {
+    if (location.hash === '#edit') { if (view !== 'editor') { bootEditor(); setView('editor', true); waitReady(function () { if (!files.length) addFile('index.html', STARTER, true); openFile(active, true); ed.refresh(); }); } }
+    else if (view !== 'start') { flush(); showStart(); }
+  });
+  $('toStart').addEventListener('click', leaveEditor);
+
+  var readyQ = [];
+  function waitReady(fn) { if (edReady) fn(); else readyQ.push(fn); }
+
+  /* ═══════════════════════════════════════════════════════ the editor ══
+     CodeMirror and Prettier load only when the editor is first opened, so
+     the start screen stays light; the service worker keeps them for offline.
+     If the CDN can't be reached, the editor still works on a plain textarea. */
+  var CM = 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/';
+  var CM_CSS = ['codemirror.min.css', 'addon/dialog/dialog.css', 'addon/fold/foldgutter.css', 'addon/hint/show-hint.css'];
+  var CM_JS = ['codemirror.min.js', 'mode/xml/xml.min.js', 'mode/javascript/javascript.min.js', 'mode/css/css.min.js', 'mode/htmlmixed/htmlmixed.min.js',
+    'addon/search/searchcursor.js', 'addon/dialog/dialog.js', 'addon/search/search.js', 'addon/edit/closebrackets.js',
+    'addon/edit/closetag.js', 'addon/edit/matchbrackets.js', 'addon/edit/matchtags.js', 'addon/fold/xml-fold.js',
+    'addon/fold/foldcode.js', 'addon/fold/foldgutter.js', 'addon/fold/brace-fold.js', 'addon/comment/comment.js',
+    'addon/selection/active-line.js', 'addon/hint/show-hint.js', 'addon/hint/xml-hint.js', 'addon/hint/html-hint.js'];
+  var PRETTIER = ['standalone.js', 'parser-html.js', 'parser-postcss.js', 'parser-babel.js'].map(function (f) {
+    return 'https://cdnjs.cloudflare.com/ajax/libs/prettier/2.8.8/' + f;
+  });
+
+  function loadCss(href) {
+    var l = doc.createElement('link'); l.rel = 'stylesheet'; l.href = href;
+    doc.head.insertBefore(l, doc.querySelector('style'));
+  }
+  function loadScript(src) {
+    return new Promise(function (ok, bad) {
+      var s = doc.createElement('script'); s.src = src; s.onload = ok; s.onerror = function () { bad(new Error(src)); };
+      doc.head.appendChild(s);
+    });
+  }
+  function loadSeq(list) { return list.reduce(function (p, src) { return p.then(function () { return loadScript(src); }); }, Promise.resolve()); }
+
+  var ed = null;
+
+  function bootEditor() {
+    if (edBooting) return;
+    edBooting = true;
+    paintIcons($('editor'));
+    buildKeyrow();
+    applySplit(false);
+    CM_CSS.forEach(function (f) { loadCss(CM + f); });
+    var timeout = new Promise(function (_, bad) { setTimeout(function () { bad(new Error('timeout')); }, 12000); });
+    Promise.race([loadSeq(CM_JS.map(function (f) { return CM + f; })), timeout])
+      .then(function () { ed = cmAdapter(); }, function () {
+        ed = taAdapter();
+        toast('Couldn’t load the full editor — basic mode', true);
+      })
+      .then(function () {
+        $('edLoading').remove();
+        edReady = true;
+        openFile(active, true);
+        if (view === 'editor') ed.focus();
+        readyQ.splice(0).forEach(function (fn) { fn(); });
+      });
+  }
+
+  function cmAdapter() {
+    var cm = CodeMirror.fromTextArea($('src'), {
+      theme: 'space', lineNumbers: prefs.lines, lineWrapping: prefs.wrap, styleActiveLine: true,
+      matchBrackets: true, matchTags: { bothTags: true }, autoCloseTags: true,
+      autoCloseBrackets: { pairs: '()[]{}\'\'""``', explode: '[]{}()' },
+      foldGutter: true, foldOptions: { widget: '…', minFoldSize: 1 },
+      gutters: prefs.lines ? ['CodeMirror-linenumbers', 'CodeMirror-foldgutter'] : ['CodeMirror-foldgutter'],
+      tabSize: 2, indentUnit: 2, inputStyle: coarse.matches ? 'contenteditable' : 'textarea',
+      extraKeys: {
+        'Ctrl-Space': 'autocomplete',
+        'Ctrl-/': 'toggleComment', 'Cmd-/': 'toggleComment',
+        'Ctrl-F': 'findPersistent', 'Cmd-F': 'findPersistent',
+        'Ctrl-G': 'findNext', 'Shift-Ctrl-G': 'findPrev', 'Cmd-G': 'findNext', 'Shift-Cmd-G': 'findPrev',
+        'Ctrl-H': 'replace', 'Cmd-Alt-F': 'replace', 'Shift-Ctrl-H': 'replaceAll',
+        'Ctrl-Q': function (c) { c.foldCode(c.getCursor()); },
+        'Tab': function (c) { if (c.somethingSelected()) c.indentSelection('add'); else c.replaceSelection('  ', 'end'); },
+        'Shift-Tab': function (c) { c.indentSelection('subtract'); }
+      }
+    });
+    // A wrapped line hangs under its own first character plus one step, so a
+    // continuation never reads as an outdent. Measured once the code font has
+    // loaded, because the fallback face has a different advance.
+    var cw = cm.defaultCharWidth();
+    cm.on('renderLine', function (c, line, elt) {
+      var ind = CodeMirror.countColumn(line.text, line.text.search(/\S|$/), c.getOption('tabSize')) * cw;
+      elt.style.textIndent = '-' + (ind + 2 * cw) + 'px';
+      elt.style.paddingLeft = (16 + ind + 2 * cw) + 'px';
+    });
+    if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(function () { cm.refresh(); cw = cm.defaultCharWidth(); cm.refresh(); });
+    cm.refresh();
+
+    var silent = false;
+    cm.on('change', function () { if (!silent) onEdit(); });
+    cm.on('cursorActivity', showPos);
+    return {
+      kind: 'cm', cm: cm,
+      get: function () { return cm.getValue(); },
+      set: function (v, mode) { silent = true; cm.setOption('mode', mode); cm.setValue(v); cm.clearHistory(); silent = false; },
+      focus: function () { cm.focus(); },
+      refresh: function () { cm.refresh(); },
+      pos: function () { var c = cm.getCursor(); return { line: c.line + 1, col: c.ch + 1 }; },
+      insert: function (text, back) {
+        cm.replaceSelection(text, 'end');
+        if (back) cm.setCursor(cm.posFromIndex(cm.indexFromPos(cm.getCursor()) + back));
+        cm.focus();
+      },
+      tab: function () { if (cm.somethingSelected()) cm.indentSelection('add'); else cm.replaceSelection('  ', 'end'); cm.focus(); },
+      undo: function () { cm.undo(); cm.focus(); }, redo: function () { cm.redo(); cm.focus(); },
+      find: function () { cm.focus(); cm.execCommand('findPersistent'); },
+      replace: function () { cm.focus(); cm.execCommand('replace'); },
+      comment: function () { cm.focus(); cm.execCommand('toggleComment'); },
+      setValueKeep: function (v) { var c = cm.getCursor(), s = cm.getScrollInfo(); cm.setValue(v); cm.setCursor(c); cm.scrollTo(s.left, s.top); },
+      opt: function (k, v) {
+        if (k === 'lines') {
+          cm.setOption('gutters', v ? ['CodeMirror-linenumbers', 'CodeMirror-foldgutter'] : ['CodeMirror-foldgutter']);
+          cm.setOption('lineNumbers', v);
+        }
+        if (k === 'wrap') cm.setOption('lineWrapping', v);
+      }
+    };
+  }
+
+  // Basic mode: the textarea the CodeMirror build would have replaced.
+  function taAdapter() {
+    var ta = $('src');
+    ta.addEventListener('input', onEdit);
+    ta.addEventListener('keyup', showPos); ta.addEventListener('click', showPos);
+    ta.addEventListener('keydown', function (e) {
+      if (e.key === 'Tab' && !e.shiftKey && !e.ctrlKey && !e.metaKey) { e.preventDefault(); ins('  ', 0); }
+    });
+    function ins(text, back) {
+      ta.focus();
+      var s = ta.selectionStart;
+      if (!doc.execCommand || !doc.execCommand('insertText', false, text)) { ta.setRangeText(text, s, ta.selectionEnd, 'end'); onEdit(); }
+      var c = s + text.length + (back || 0); ta.setSelectionRange(c, c); showPos();
+    }
+    ta.style.whiteSpace = prefs.wrap ? 'pre-wrap' : 'pre';
+    return {
+      kind: 'ta',
+      get: function () { return ta.value; },
+      set: function (v) { ta.value = v; ta.scrollTop = 0; },
+      focus: function () { ta.focus(); }, refresh: function () {},
+      pos: function () { var b = ta.value.slice(0, ta.selectionStart).split('\n'); return { line: b.length, col: b[b.length - 1].length + 1 }; },
+      insert: ins, tab: function () { ins('  ', 0); },
+      undo: function () { ta.focus(); doc.execCommand('undo'); }, redo: function () { ta.focus(); doc.execCommand('redo'); },
+      find: function () { toast('Find needs the full editor', true); }, replace: function () { toast('Find needs the full editor', true); },
+      comment: function () {},
+      setValueKeep: function (v) { var s = ta.selectionStart; ta.value = v; ta.setSelectionRange(s, s); onEdit(); },
+      opt: function (k, v) { if (k === 'wrap') ta.style.whiteSpace = v ? 'pre-wrap' : 'pre'; }
+    };
+  }
+
+  /* ── tabs ─────────────────────────────────────────────────────────────── */
+  /* The strip is rebuilt only when the set of files changes; switching file
+     just moves the "on" state, and only tabs that are new animate in. */
+  var tabSig = '', tabSeen = {};
+  function renderTabs() {
+    var host = $('tabs');
+    var sig = files.map(function (f) { return f.name; }).join('\n');
+    if (sig === tabSig) {
+      Array.prototype.forEach.call(host.children, function (t, i) {
+        var on = i === active;
+        if (t.classList.contains('on') !== on) { t.classList.toggle('on', on); t.setAttribute('aria-selected', String(on)); t.tabIndex = on ? 0 : -1; }
+      });
+      var cur = host.children[active];
+      if (cur && cur.scrollIntoView) cur.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      $('fileName').textContent = files[active] ? files[active].name : '';
+      return;
+    }
+    var first = !tabSig;
+    tabSig = sig;
+    host.innerHTML = '';
+    var seen = {};
+    files.forEach(function (f, i) {
+      var t = doc.createElement('div');
+      t.className = 'tab' + (i === active ? ' on' : '') + (!first && !tabSeen[f.name] ? ' new' : '');
+      seen[f.name] = true;
+      t.setAttribute('role', 'tab'); t.setAttribute('aria-selected', String(i === active));
+      t.tabIndex = i === active ? 0 : -1;
+      t.title = f.name + ' — double-click to rename';
+      t.innerHTML = '<i class="dot ' + kindOf(f.name) + '"></i><span class="tn"></span><button class="x" aria-label="Close ' + f.name.replace(/"/g, '') + '">' + icon('x') + '</button>';
+      t.querySelector('.tn').textContent = f.name;
+      t.addEventListener('click', function (e) { if (!e.target.closest('.x')) openFile(i); });
+      t.addEventListener('dblclick', function (e) { if (!e.target.closest('.x')) renameDialog(i); });
+      t.addEventListener('auxclick', function (e) { if (e.button === 1) closeFile(i); });
+      t.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+          e.preventDefault(); var n = (i + (e.key === 'ArrowRight' ? 1 : -1) + files.length) % files.length;
+          openFile(n); var nt = host.children[n]; if (nt) nt.focus();
+        } else if (e.key === 'F2') { e.preventDefault(); renameDialog(i); }
+        else if (e.key === 'Delete') { e.preventDefault(); closeFile(i); }
+      });
+      t.querySelector('.x').addEventListener('click', function (e) { e.stopPropagation(); closeFile(i); });
+      host.appendChild(t);
+    });
+    tabSeen = seen;
+    var on = host.children[active];
+    if (on && on.scrollIntoView) on.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    $('fileName').textContent = files[active] ? files[active].name : '';
+  }
+
+  function openFile(i, force) {
+    if (!edReady || !files.length) return;
+    if (!force && i === active) return;
+    if (files[active] && !force) files[active].content = ed.get();
+    active = Math.max(0, Math.min(i, files.length - 1));
+    var f = files[active];
+    ed.set(f.content, modeFor(f.name));
+    renderTabs(); showPos(); showCounts();
+    $('stMode').textContent = langOf(f.name);
+    $('headDot').className = 'dot ' + kindOf(f.name);
+    $('headName').textContent = f.name;
+    showLinks();
+    if (view === 'editor') doc.title = f.name + ' — Code';
+    if (previewOn) renderPreview();
+    writeStore();
+  }
+
+  function addFile(name, content, quiet) {
+    if (edReady && files[active]) files[active].content = ed.get();
+    files.push({ name: uniqueName(name), content: content || '', updated: Date.now() });
+    active = files.length - 1;
+    writeStore();
+    if (edReady) { openFile(active, true); ed.focus(); }
+    if (!quiet) toast('Created ' + files[active].name);
+  }
+
+  function closeFile(i) {
+    var f = files[i];
+    var go = function () {
+      files.splice(i, 1);
+      if (!files.length) { files.push({ name: 'untitled.html', content: '', updated: Date.now() }); toast('Started a fresh file'); }
+      active = i < active ? active - 1 : Math.min(active, files.length - 1);
+      openFile(active, true);
+    };
+    if (!f.content.trim()) { go(); return; }
+    ask({ title: 'Close ' + f.name + '?', body: ['Its contents only live in this browser, so closing deletes them. Download it first if you want to keep a copy.'], ok: 'Close and delete', danger: true })
+      .then(function (yes) { if (yes) go(); });
+  }
+
+  function renameDialog(i) {
+    var f = files[i], fl = field('File name', f.name);
+    ask({ title: 'Rename', body: [fl.el], ok: 'Rename', validate: function () { return checkName(fl.input.value, i); } })
+      .then(function (yes) {
+        if (!yes) return;
+        var n = fl.input.value.trim();
+        if (n === f.name) return;
+        if (i === active) files[i].content = ed.get();
+        f.name = n; f.updated = Date.now();
+        openFile(active, true);
+      });
+  }
+
+  function newFileDialog(kind) {
+    var tpl = kind === 'blank' ? 'blank' : 'page';
+    var fl = field('File name', tpl === 'page' ? uniqueName('index.html') : uniqueName('untitled.html'));
+    var pills = doc.createElement('div'); pills.className = 'pills'; pills.setAttribute('role', 'radiogroup');
+    [['page', 'Web page'], ['blank', 'Blank']].forEach(function (p) {
+      var b = doc.createElement('button'); b.type = 'button'; b.className = 'pill'; b.setAttribute('role', 'radio');
+      b.textContent = p[1]; b.setAttribute('aria-checked', String(p[0] === tpl));
+      b.addEventListener('click', function () {
+        tpl = p[0];
+        Array.prototype.forEach.call(pills.children, function (c) { c.setAttribute('aria-checked', String(c === b)); });
+        if (tpl === 'page' && !/\.html?$/i.test(fl.input.value)) fl.input.value = fl.input.value.replace(/\.[^.]*$/, '') + '.html';
+      });
+      pills.appendChild(b);
+    });
+    var lab = doc.createElement('div'); lab.className = 'fld';
+    lab.innerHTML = '<span class="micro">Start from</span>'; lab.appendChild(pills);
+    ask({ title: 'New file', body: [fl.el, lab], ok: 'Create', validate: function () { return checkName(fl.input.value); } })
+      .then(function (yes) {
+        // cancelling with nothing open still leaves something to type into
+        if (!yes) { if (!files.length) addFile('index.html', STARTER, true); return; }
+        var n = fl.input.value.trim();
+        addFile(n, tpl === 'page' && /\.html?$/i.test(n) ? STARTER : '', true);
+      });
+  }
+
+  function saveDialog() {
+    var f = files[active], fl = field('Download as', f.name);
+    ask({ title: 'Save a copy', body: ['Your work is already kept in this browser. This downloads a copy to your device.', fl.el], ok: 'Download', validate: function () { return checkName(fl.input.value, active); } })
+      .then(function (yes) {
+        if (!yes) return;
+        var n = fl.input.value.trim();
+        if (n !== f.name) { f.content = ed.get(); f.name = n; openFile(active, true); }
+        download();
+      });
+  }
+
+  function download() {
+    var f = files[active], text = ed.get();
+    var a = doc.createElement('a');
+    a.href = URL.createObjectURL(new Blob([text], { type: mimeFor(f.name) }));
+    a.download = f.name; doc.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+    toast('Downloaded ' + f.name);
+  }
+
+  $('fileIn').addEventListener('change', function () {
+    var list = Array.prototype.slice.call(this.files || []);
+    this.value = '';
+    if (!list.length) return;
+    Promise.all(list.map(function (f) { return f.text().then(function (t) { return { name: f.name, text: t }; }); }))
+      .then(function (got) {
+        var go = function () {
+          got.forEach(function (g) { addFile(g.name, g.text, true); });
+          toast(got.length === 1 ? 'Opened ' + files[active].name : 'Opened ' + got.length + ' files');
+        };
+        if (view === 'editor') go(); else enterEditor(go);
+      });
+  });
+
+  // Files dropped anywhere on the page open the same way as "Open from device".
+  var dragDepth = 0;
+  function hasFiles(e) { return e.dataTransfer && Array.prototype.indexOf.call(e.dataTransfer.types || [], 'Files') > -1; }
+  doc.addEventListener('dragenter', function (e) { if (!hasFiles(e)) return; dragDepth++; doc.body.classList.add('drop-on'); });
+  doc.addEventListener('dragleave', function (e) { if (!hasFiles(e)) return; if (--dragDepth <= 0) { dragDepth = 0; doc.body.classList.remove('drop-on'); } });
+  doc.addEventListener('dragover', function (e) { if (hasFiles(e)) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; } });
+  doc.addEventListener('drop', function (e) {
+    if (!hasFiles(e)) return;
+    e.preventDefault(); dragDepth = 0; doc.body.classList.remove('drop-on');
+    var inp = $('fileIn');
+    try { inp.files = e.dataTransfer.files; } catch (err) { return; }
+    inp.dispatchEvent(new Event('change'));
+  });
+
+  /* ── editing state: status bar, autosave ─────────────────────────────── */
+  function onEdit() {
+    var f = files[active]; if (!f) return;
+    f.content = ed.get(); f.updated = Date.now();
+    touched(); countsSoon();
+    if (previewOn) previewSoon();
+  }
+  function showPos() { var p = ed.pos(); $('stPos').textContent = 'Ln ' + p.line + ', Col ' + p.col; }
+  function showCounts() {
+    var v = ed.get(), lines = v ? v.split('\n').length : 1, words = (v.match(/\S+/g) || []).length;
+    $('stCounts').textContent = lines + ' lines · ' + words + ' words · ' + v.length + ' chars';
+  }
+  var countsSoon = debounce(function () { showCounts(); showLinks(); }, 150);
+
+  // The code header says what the preview will pull in from other tabs.
+  function showLinks() {
+    var f = files[active], el = $('headLinks');
+    if (!f || kindOf(f.name) !== 'html') { el.textContent = langOf(f ? f.name : ''); return; }
+    var names = {}, out = [];
+    files.forEach(function (g) { if (g !== f) names[g.name.toLowerCase()] = g.name; });
+    f.content.replace(/(?:href|src)\s*=\s*["']\.?\/?([^"'?#]+)/gi, function (m, p) {
+      var hit = names[p.toLowerCase()];
+      if (hit && out.indexOf(hit) < 0) out.push(hit);
+    });
+    el.textContent = out.length ? 'Linked · ' + out.join(', ') : 'HTML';
+  }
+  function showSave() {
+    var s = $('stSave'), t = s.querySelector('span');
+    s.classList.toggle('bad', !storeOk);
+    s.classList.toggle('ok', storeOk && !dirty);
+    t.textContent = !storeOk ? 'Not saved — storage blocked' : dirty ? 'Saving' : 'Saved';
+    if (storeOk && !dirty) { s.classList.remove('pulse'); void s.offsetWidth; s.classList.add('pulse'); }
+  }
+
+  /* ── preview ──────────────────────────────────────────────────────────
+     The preview runs in a sandboxed iframe with scripts but no same-origin
+     access, so your code can't reach this page or its saved files. An HTML
+     file's <link> and <script src> pointing at another open file are inlined,
+     so a page split into .html/.css/.js previews as one. */
+  var previewOn = false;
+  function previewSource() {
+    var f = files[active];
+    if (!f) return { name: '', html: '' };
+    var k = kindOf(f.name);
+    var page = f;
+    if (k !== 'html') {
+      // a stylesheet or script previews through the page that uses it
+      page = files.find(function (g) { return kindOf(g.name) === 'html' && g.content.indexOf(f.name) > -1; }) || null;
+      if (!page) {
+        var esc = f.content.replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; });
+        return { name: f.name, html: '<!doctype html><meta charset="utf-8"><body style="margin:0;background:#0a0b11;color:#e6e6e1"><pre style="margin:0;padding:16px;font:13px/1.6 ui-monospace,monospace;white-space:pre-wrap">' + esc + '</pre>' };
+      }
+    }
+    var byName = {};
+    files.forEach(function (g) { byName[g.name.toLowerCase()] = g.content; });
+    function local(href) { href = (href || '').replace(/^\.\//, '').split(/[?#]/)[0].toLowerCase(); return byName.hasOwnProperty(href) ? byName[href] : null; }
+    var html = page.content
+      .replace(/<link\b[^>]*?href\s*=\s*["']([^"']+)["'][^>]*>/gi, function (m, href) {
+        var c = /rel\s*=\s*["']?stylesheet/i.test(m) ? local(href) : null;
+        return c == null ? m : '<style>' + c.replace(/<\/style/gi, '<\\/style') + '</style>';
+      })
+      .replace(/<script\b([^>]*?)\bsrc\s*=\s*["']([^"']+)["']([^>]*)>\s*<\/script>/gi, function (m, a, src, b) {
+        var c = local(src);
+        return c == null ? m : '<script' + a + b + '>' + c.replace(/<\/script/gi, '<\\/script') + '<\/script>';
+      });
+    return { name: page.name, html: html };
+  }
+  function renderPreview() {
+    var src = previewSource(), fr = $('frame');
+    fr.setAttribute('sandbox', 'allow-scripts allow-modals allow-forms allow-popups');
+    fr.srcdoc = src.html;
+    $('prevName').textContent = src.name;
+  }
+  var previewSoon = debounce(renderPreview, 400);
+  function applySplit(on) {
+    previewOn = on;
+    $('edMain').classList.toggle('split', on);
+    $('prevBtn').setAttribute('aria-pressed', String(on));
+    $('edMain').style.setProperty('--prev-w', prefs.prevW + '%');
+    if (on) renderPreview(); else $('frame').srcdoc = '';
+    if (ed) setTimeout(function () { ed.refresh(); }, 60);
+  }
+  function togglePreview() { if (edReady) applySplit(!previewOn); }
+  $('prevBtn').addEventListener('click', togglePreview);
+  $('closePrev').addEventListener('click', function () { applySplit(false); ed.focus(); });
+  $('rerunBtn').addEventListener('click', function () {
+    renderPreview();
+    var b = $('frameBox'); b.classList.remove('flash'); void b.offsetWidth; b.classList.add('flash');
+  });
+
+  // Open in a new tab without handing your code this site's origin: the tab
+  // is a blank page holding the same sandboxed frame as the preview.
+  function openInTab() {
+    var w = window.open('', '_blank');
+    if (!w) { toast('The browser blocked the new tab', true); return; }
+    var src = previewSource();
+    w.document.write('<!doctype html><meta charset="utf-8"><title></title><style>html,body,iframe{margin:0;width:100%;height:100%;border:0;display:block}</style>');
+    w.document.title = src.name;
+    var fr = w.document.createElement('iframe');
+    fr.setAttribute('sandbox', 'allow-scripts allow-modals allow-forms allow-popups');
+    fr.srcdoc = src.html;
+    w.document.body.appendChild(fr);
+    w.document.close();
+    try { w.opener = null; } catch (e) {}
+  }
+  $('tabBtn').addEventListener('click', openInTab);
+
+  // drag the divider to size the preview
+  $('split').addEventListener('pointerdown', function (e) {
+    var main = $('edMain'), r = main.getBoundingClientRect(), sp = this;
+    sp.setPointerCapture(e.pointerId); sp.classList.add('drag'); main.classList.add('dragging');
+    function mv(ev) {
+      var pct = Math.max(20, Math.min(75, (r.right - ev.clientX) / r.width * 100));
+      prefs.prevW = Math.round(pct); main.style.setProperty('--prev-w', pct + '%');
+    }
+    function up() {
+      sp.removeEventListener('pointermove', mv); sp.removeEventListener('pointerup', up);
+      sp.classList.remove('drag'); main.classList.remove('dragging'); savePrefs(); ed.refresh();
+    }
+    sp.addEventListener('pointermove', mv); sp.addEventListener('pointerup', up);
+  });
+  $('split').addEventListener('dblclick', function () { prefs.prevW = 46; savePrefs(); applySplit(true); });
+
+  /* ── formatting ──────────────────────────────────────────────────────── */
+  var prettierP = null;
+  function format() {
+    if (!edReady) return;
+    var f = files[active], e = extOf(f.name);
+    var parser = /^(css|scss|less)$/.test(e) ? 'css' : /^(js|mjs)$/.test(e) ? 'babel' : e === 'json' ? 'json' : /^(html|htm|svg|xml)$/.test(e) ? 'html' : null;
+    if (!parser) { toast('Nothing to format in ' + langOf(f.name), true); return; }
+    var v = ed.get();
+    if (!v.trim()) { toast('Nothing to format'); return; }
+    var b = $('fmtBtn'); b.classList.add('busy');
+    prettierP = prettierP || loadSeq(PRETTIER);
+    prettierP.then(function () {
+      var out = prettier.format(v, { parser: parser, plugins: prettierPlugins, printWidth: 80, tabWidth: 2, useTabs: false, htmlWhitespaceSensitivity: 'css' });
+      if (out === v) toast('Already tidy');
+      else { ed.setValueKeep(out); onEdit(); toast('Formatted'); }
+    }).catch(function (err) {
+      if (!window.prettier) { prettierP = null; toast('Formatter unavailable offline until first use online', true); }
+      else toast(String(err && err.message || err).split('\n')[0].slice(0, 90), true);
+    }).then(function () { b.classList.remove('busy'); });
+  }
+  $('fmtBtn').addEventListener('click', format);
+
+  /* ── toolbar and menus ───────────────────────────────────────────────── */
+  $('newBtn').addEventListener('click', function () { newFileDialog('page'); });
+  $('saveBtn').addEventListener('click', saveDialog);
+  $('findBtn').addEventListener('click', function () { ed && ed.find(); });
+
+  function copyAll() {
+    var v = ed.get();
+    if (!v) { toast('Nothing to copy'); return; }
+    (navigator.clipboard ? navigator.clipboard.writeText(v) : Promise.reject())
+      .then(function () { toast('Copied ' + files[active].name); }, function () { toast('Couldn’t reach the clipboard', true); });
+  }
+  function pasteIn() {
+    (navigator.clipboard && navigator.clipboard.readText ? navigator.clipboard.readText() : Promise.reject())
+      .then(function (t) { if (t) ed.insert(t, 0); }, function () { toast('Long-press in the editor to paste', true); });
+  }
+  function clearFile() {
+    ask({ title: 'Clear ' + files[active].name + '?', body: ['Everything in this file is removed. Undo brings it back.'], ok: 'Clear', danger: true })
+      .then(function (yes) { if (yes) { ed.setValueKeep(''); onEdit(); ed.focus(); } });
+  }
+  function shortcuts() {
+    var k = doc.createElement('div'); k.className = 'keys';
+    [[MOD + '+S', 'Download the file'], [MOD + '+B', 'Show or hide the preview'], [MOD + '+Enter', 'Open the preview in a new tab'],
+     [MOD + '+F', 'Find'], [MOD + '+H', 'Find and replace'], [MOD + '+/', 'Comment or uncomment'], ['Shift+Alt+F', 'Format'],
+     ['Ctrl+Space', 'Suggest a tag or attribute'], ['Ctrl+Q', 'Fold or unfold a block'], ['Alt+N', 'New file'],
+     ['Alt+← / →', 'Previous or next file'], ['Double-click a tab', 'Rename it']].forEach(function (r) {
+      var a = doc.createElement('kbd'); a.textContent = r[0];
+      var b = doc.createElement('span'); b.textContent = r[1];
+      k.appendChild(a); k.appendChild(b);
+    });
+    ask({ title: 'Keyboard', body: [k], ok: 'Done', cancel: false });
+  }
+
+  var installEvt = null;
+  window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); installEvt = e; });
+  window.addEventListener('appinstalled', function () { installEvt = null; toast('Installed'); });
+  function install() {
+    if (!installEvt) return;
+    installEvt.prompt();
+    installEvt.userChoice.then(function (c) { toast(c.outcome === 'accepted' ? 'Installing' : 'Install cancelled'); installEvt = null; });
+  }
+
+  function setPref(k, v) {
+    prefs[k] = v; savePrefs(); ed.opt(k, v);
+    toast((k === 'wrap' ? 'Line wrap ' : 'Line numbers ') + (v ? 'on' : 'off'));
+  }
+
+  $('moreBtn').addEventListener('click', function () {
+    var items = [
+      { label: 'Open from device', icon: 'upload', run: function () { $('fileIn').click(); } },
+      { label: 'Rename file', icon: 'pencil', key: 'F2', run: function () { renameDialog(active); } },
+      'sep',
+      { label: 'Find and replace', icon: 'search', key: MOD + '+H', run: function () { ed.replace(); } },
+      { label: 'Copy all', icon: 'copy', run: copyAll },
+      { label: 'Paste', icon: 'paste', run: pasteIn },
+      { label: 'Open preview in a tab', icon: 'external', key: MOD + '+↵', run: openInTab },
+      'sep',
+      { label: 'Wrap long lines', icon: 'wrap', check: prefs.wrap, run: function () { setPref('wrap', !prefs.wrap); } },
+      { label: 'Line numbers', icon: 'lines', check: prefs.lines, run: function () { setPref('lines', !prefs.lines); } },
+      { label: 'Keyboard shortcuts', icon: 'keyboard', run: shortcuts }
+    ];
+    if (installEvt) items.push({ label: 'Install as an app', icon: 'install', run: install });
+    items.push('sep', { label: 'Clear this file', icon: 'trash', danger: true, run: clearFile });
+    menu(this, items);
+  });
+
+  // narrow screens: the file name opens a list of every file
+  $('fileBtn').addEventListener('click', function () {
+    var items = [{ label: 'Files', heading: true }];
+    files.forEach(function (f, i) { items.push({ label: f.name, dot: kindOf(f.name), on: i === active, run: function () { openFile(i); } }); });
+    items.push('sep',
+      { label: 'New file', icon: 'plus', run: function () { newFileDialog('page'); } },
+      { label: 'Rename ' + files[active].name, icon: 'pencil', run: function () { renameDialog(active); } },
+      { label: 'Close ' + files[active].name, icon: 'x', danger: true, run: function () { closeFile(active); } });
+    menu(this, items);
+  });
+
+  /* ── coding key row (touch): history, tab, symbols, tag snippets ─────── */
+  function buildKeyrow() {
+    var row = $('keyrow');
+    function key(label, title, fn, cls) {
+      var b = doc.createElement('button'); b.className = 'key' + (cls ? ' ' + cls : ''); b.type = 'button';
+      if (/^ico:/.test(label)) b.innerHTML = icon(label.slice(4)); else b.textContent = label;
+      b.title = title; b.setAttribute('aria-label', title);
+      // keep the soft keyboard up: don't let the button take focus
+      b.addEventListener('pointerdown', function (e) { e.preventDefault(); });
+      b.addEventListener('click', function () { if (ed) fn(); });
+      row.appendChild(b);
+    }
+    function sep() { row.appendChild(Object.assign(doc.createElement('span'), { className: 'keysep' })); }
+    key('ico:undo', 'Undo', function () { ed.undo(); });
+    key('ico:redo', 'Redo', function () { ed.redo(); });
+    key('ico:tab', 'Indent', function () { ed.tab(); });
+    sep();
+    ['<', '>', '/', '=', '"', '\'', '{', '}', '(', ')', '[', ']', ';', ':', '.', '#', '-', '!', '$', '`'].forEach(function (c) {
+      key(c, 'Type ' + c, function () { ed.insert(c, 0); });
+    });
+    sep();
+    [['div', '<div></div>', -6], ['p', '<p></p>', -4], ['span', '<span></span>', -7], ['h1', '<h1></h1>', -5],
+     ['a', '<a href=""></a>', -6], ['img', '<img src="" alt="">', -9], ['ul', '<ul>\n  <li></li>\n</ul>', -11],
+     ['button', '<button></button>', -9], ['input', '<input type="text" placeholder="">', -2],
+     ['style', '<style>\n\n</style>', -9], ['script', '<script>\n\n<\/script>', -10], ['<!-- -->', '<!--  -->', -4]
+    ].forEach(function (s) { key(s[0], 'Insert ' + s[1].split('\n')[0], function () { ed.insert(s[1], s[2]); }, 'wide'); });
+  }
+
+  // On phones the keyboard covers the bottom of the layout viewport; size the
+  // editor to the visual viewport so the key row and status sit above it.
+  if (window.visualViewport) {
+    var vv = window.visualViewport;
+    var fit = function () {
+      if (view !== 'editor') return;
+      var e = $('editor');
+      e.style.height = vv.height + 'px';
+      e.style.transform = vv.offsetTop ? 'translateY(' + vv.offsetTop + 'px)' : '';
+    };
+    vv.addEventListener('resize', fit); vv.addEventListener('scroll', fit);
+  }
+
+  /* ── keyboard ────────────────────────────────────────────────────────── */
+  doc.addEventListener('keydown', function (e) {
+    if (view !== 'editor' || doc.querySelector('ed-dialog')) return;
+    var mod = e.ctrlKey || e.metaKey, k = e.key.toLowerCase();
+    if (mod && k === 's') { e.preventDefault(); if (edReady) download(); }
+    else if (mod && k === 'b') { e.preventDefault(); togglePreview(); }
+    else if (mod && e.key === 'Enter') { e.preventDefault(); if (edReady) openInTab(); }
+    else if (e.altKey && e.shiftKey && k === 'f') { e.preventDefault(); format(); }
+    else if (e.altKey && !mod && k === 'n') { e.preventDefault(); newFileDialog('page'); }
+    else if (e.altKey && !mod && (e.key === 'ArrowLeft' || e.key === 'ArrowRight') && files.length > 1) {
+      e.preventDefault(); openFile((active + (e.key === 'ArrowRight' ? 1 : -1) + files.length) % files.length);
+    }
+    else if (e.key === 'Escape' && previewOn && narrow.matches) { e.preventDefault(); applySplit(false); }
+    else if (e.key === 'F2') { e.preventDefault(); renameDialog(active); }
+    else if (mod && !e.target.closest('.CodeMirror') && edReady) {
+      if (k === 'f') { e.preventDefault(); ed.find(); }
+      else if (k === 'h') { e.preventDefault(); ed.replace(); }
+    }
+  });
+
+  /* ═══════════════════════════════════════════════════════════ boot ══ */
+  readStore();
+  paintIcons(doc);
+  if (location.hash === '#edit') {
+    history.replaceState({ v: 'editor' }, '', '#edit');
+    bootEditor();
+    setView('editor', false);
+    if (!files.length) waitReady(function () { addFile('index.html', STARTER, true); });
+  } else {
+    setView('start', false);
+  }
+
+  if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+    window.addEventListener('load', function () { navigator.serviceWorker.register('/sw.js').catch(function () {}); });
+  }
 })();
 </script>
-
 </body>
 </html>
